@@ -12,7 +12,9 @@ export const nodeSchema = z.object({
   type: z.enum([
     'page',
     'frame',
+    'group',
     'container',
+    'rect',
     'text',
     'image',
     'button',

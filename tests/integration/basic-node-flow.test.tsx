@@ -20,7 +20,7 @@ describe('basic node flow', () => {
     await user.click(screen.getByText('新增容器'))
 
     expect(screen.getByRole('button', { name: '按钮' })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: '图片描述' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '图片描述' })).toBeInTheDocument()
     expect(screen.getByText('容器')).toBeInTheDocument()
   })
 
@@ -35,7 +35,7 @@ describe('basic node flow', () => {
     expect(screen.getByRole('button', { name: '注册' })).toBeInTheDocument()
 
     await user.click(screen.getByText('新增图片'))
-    await user.click(screen.getByRole('img', { name: '图片描述' }))
+    await user.click(screen.getByRole('button', { name: '图片描述' }))
     await user.clear(screen.getByLabelText('图片地址'))
     await user.type(screen.getByLabelText('图片地址'), 'https://example.com/card.png')
     const altInput = screen.getByDisplayValue('图片描述')
