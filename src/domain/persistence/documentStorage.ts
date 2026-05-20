@@ -1,14 +1,16 @@
 import { pageDocumentSchema } from '../model/schema'
 import type { PageDocument } from '../model/types'
+import { browserStorageAdapter } from '../../platform/storage/browserStorageAdapter'
 
 const STORAGE_KEY = 'ui-loom.document'
+const storage = browserStorageAdapter
 
 export function saveDocument(document: PageDocument) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(document))
+  storage.setItem(STORAGE_KEY, JSON.stringify(document))
 }
 
 export function loadDocument(): PageDocument | null {
-  const raw = localStorage.getItem(STORAGE_KEY)
+  const raw = storage.getItem(STORAGE_KEY)
 
   if (!raw) {
     return null
