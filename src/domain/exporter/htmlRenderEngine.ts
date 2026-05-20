@@ -5,6 +5,7 @@ type HtmlRenderableNodeType =
   | 'button'
   | 'image'
   | 'container'
+  | 'frame'
   | 'rect'
   | 'group'
 type HtmlRenderableNode = UINode & { type: HtmlRenderableNodeType }
@@ -15,6 +16,7 @@ function isHtmlRenderableNode(node: UINode): node is HtmlRenderableNode {
     node.type === 'button' ||
     node.type === 'image' ||
     node.type === 'container' ||
+    node.type === 'frame' ||
     node.type === 'rect' ||
     node.type === 'group'
   )
@@ -172,6 +174,20 @@ function renderContainerNode(document: PageDocument, node: HtmlRenderableNode) {
   ].join('\n')
 }
 
+function renderFrameNode(document: PageDocument, node: HtmlRenderableNode) {
+  const children = renderChildren(document, node)
+
+  if (!children) {
+    return `<div class="${nodeClassName(node)}" aria-label="Frame 节点"></div>`
+  }
+
+  return [
+    `<div class="${nodeClassName(node)}" aria-label="Frame 节点">`,
+    indent(children),
+    '</div>',
+  ].join('\n')
+}
+
 function renderGroupNode(document: PageDocument, node: HtmlRenderableNode) {
   const children = renderChildren(document, node)
 
@@ -192,6 +208,7 @@ function renderHtmlNode(document: PageDocument, node: HtmlRenderableNode): strin
   if (node.type === 'image') return renderImageNode(node)
   if (node.type === 'rect') return renderRectNode(node)
   if (node.type === 'group') return renderGroupNode(document, node)
+  if (node.type === 'frame') return renderFrameNode(document, node)
   if (node.type === 'container') return renderContainerNode(document, node)
   throw new Error(`HTML export does not support node type: ${node.type}`)
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   createButtonNode,
+  createFrameNode,
   insertChildNode,
 } from '../../../src/domain/commands/editorCommands'
 import { exportToHtmlCssJsBundle } from '../../../src/domain/exporter/htmlCssJsExporter'
@@ -88,5 +89,30 @@ describe('export bundle architecture', () => {
     expect(bundle.files[0].content).toContain('<template>')
     expect(bundle.files[0].content).toContain('<script setup')
     expect(bundle.files[0].content).toContain('保存')
+  })
+
+  it('exports frame auto layout semantics across code targets', () => {
+    const document = createEmptyDocument('Frame Export Test')
+    const frameNode = createFrameNode()
+    const withFrame = insertChildNode(document, document.rootNodeId, frameNode)
+    const next = insertChildNode(
+      withFrame,
+      frameNode.id,
+      createButtonNode('继续'),
+    )
+
+    const htmlBundle = exportToHtmlCssJsBundle(next)
+    const vueBundle = exportToVue3Bundle(next)
+    const reactBundle = exportToReactTailwindBundle(next)
+
+    expect(htmlBundle.files[0].content).toContain('aria-label="Frame 节点"')
+    expect(htmlBundle.files[1].content).toContain('flex-direction: column;')
+    expect(htmlBundle.files[1].content).toContain('gap: 16px;')
+    expect(htmlBundle.files[1].content).toContain('padding: 24px;')
+    expect(vueBundle.files[0].content).toContain('aria-label="Frame 节点"')
+    expect(vueBundle.files[0].content).toContain('flex-direction: column;')
+    expect(reactBundle.files[0].content).toContain('aria-label="Frame 节点"')
+    expect(reactBundle.files[0].content).toContain('flex flex-col gap-4 p-6')
+    expect(reactBundle.files[0].content).toContain('继续')
   })
 })

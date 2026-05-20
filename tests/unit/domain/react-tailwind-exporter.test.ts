@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   createButtonNode,
   createContainerNode,
+  createFrameNode,
   createImageNode,
   createTextNode,
   insertChildNode,
@@ -72,6 +73,35 @@ describe('exportToReactTailwind', () => {
     expect(code).toContain('立即开始')
     expect(code.indexOf('<div className="rounded-2xl')).toBeLessThan(
       code.indexOf('立即开始'),
+    )
+  })
+
+  it('exports frame children as a semantic auto layout wrapper', () => {
+    const document = createEmptyDocument('Frame React Test')
+    const frameNode = createFrameNode()
+    const buttonNode = createButtonNode('确认')
+    const withFrame = insertChildNode(document, document.rootNodeId, frameNode)
+    const next = insertChildNode(withFrame, frameNode.id, buttonNode)
+    const code = exportToReactTailwind(next)
+
+    expect(code).toContain(
+      '<div aria-label="Frame 节点" className="rounded-3xl bg-white border border-stone-300 flex flex-col gap-4 p-6 items-stretch">',
+    )
+    expect(code).toContain('确认')
+    expect(code.indexOf('Frame 节点')).toBeLessThan(code.indexOf('确认'))
+  })
+
+  it('exports custom frame spacing as explicit Tailwind arbitrary values', () => {
+    const document = createEmptyDocument('Frame Custom Spacing Test')
+    const frameNode = createFrameNode({
+      gap: 20,
+      padding: { top: 20, right: 28, bottom: 36, left: 44 },
+    })
+    const next = insertChildNode(document, document.rootNodeId, frameNode)
+    const code = exportToReactTailwind(next)
+
+    expect(code).toContain(
+      'flex flex-col gap-[20px] pt-[20px] pr-[28px] pb-[36px] pl-[44px]',
     )
   })
 })

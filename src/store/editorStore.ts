@@ -3,10 +3,12 @@ import {
   alignNodesLeft,
   createButtonNode,
   createContainerNode,
+  createFrameNode,
   createImageNode,
   createRectNode,
   createTextNode,
   distributeNodesHorizontally,
+  frameSelectedNodes,
   groupSelectedNodes,
   insertChildNode,
   moveNode,
@@ -42,11 +44,13 @@ interface EditorState {
   addButtonNode: () => void
   addImageNode: () => void
   addContainerNode: () => void
+  addFrameNode: () => void
   addRectNode: () => void
   deleteSelectedNode: () => void
   moveLayerBackward: (nodeId: string) => void
   moveLayerForward: (nodeId: string) => void
   moveSelectedNodeToFirstContainer: () => void
+  frameSelectedNodes: () => void
   groupSelectedNodes: () => void
   selectNode: (nodeId: string) => void
   selectNodesByIds: (nodeIds: string[]) => void
@@ -111,6 +115,16 @@ export const useEditorStore = create<EditorState>((set) => ({
         ),
       ),
     ),
+  addFrameNode: () =>
+    set((state) =>
+      withPersistedDocument(
+        insertChildNode(
+          state.document,
+          state.document.rootNodeId,
+          createFrameNode(),
+        ),
+      ),
+    ),
   addRectNode: () =>
     set((state) =>
       withPersistedDocument(
@@ -155,6 +169,8 @@ export const useEditorStore = create<EditorState>((set) => ({
 
       return withPersistedDocument(moveNode(state.document, nodeId, container.id))
     }),
+  frameSelectedNodes: () =>
+    set((state) => withPersistedDocument(frameSelectedNodes(state.document))),
   groupSelectedNodes: () =>
     set((state) => withPersistedDocument(groupSelectedNodes(state.document))),
   selectNode: (nodeId) =>

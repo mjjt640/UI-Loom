@@ -259,10 +259,18 @@ export function CanvasNode({
     )
   }
 
-  if (node.type === 'container' || node.type === 'group') {
+  if (node.type === 'container' || node.type === 'group' || node.type === 'frame') {
+    const nodeLabel =
+      node.type === 'group'
+        ? '图层组'
+        : node.type === 'frame'
+          ? 'Frame 节点'
+          : '容器节点'
+    const emptyLabel = node.type === 'frame' ? 'Frame' : '容器'
+
     return (
       <div
-        aria-label={node.type === 'group' ? '图层组' : '容器节点'}
+        aria-label={nodeLabel}
         className={
           node.type === 'group'
             ? `text-sm text-stone-500 ${selectionClass}`
@@ -282,7 +290,7 @@ export function CanvasNode({
       >
         {resizeHandle}
         {node.children.length === 0 ? (
-          <span className="self-center">容器</span>
+          <span className="self-center">{emptyLabel}</span>
         ) : (
           node.children
             .map((childId) => document.nodes[childId])

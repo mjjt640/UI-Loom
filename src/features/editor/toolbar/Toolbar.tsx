@@ -16,12 +16,14 @@ export function Toolbar() {
   const addButtonNode = useEditorStore((state) => state.addButtonNode)
   const addImageNode = useEditorStore((state) => state.addImageNode)
   const addContainerNode = useEditorStore((state) => state.addContainerNode)
+  const addFrameNode = useEditorStore((state) => state.addFrameNode)
   const addRectNode = useEditorStore((state) => state.addRectNode)
   const deleteSelectedNode = useEditorStore((state) => state.deleteSelectedNode)
   const distributeSelectedNodesHorizontally = useEditorStore(
     (state) => state.distributeSelectedNodesHorizontally,
   )
   const groupSelectedNodes = useEditorStore((state) => state.groupSelectedNodes)
+  const frameSelectedNodes = useEditorStore((state) => state.frameSelectedNodes)
   const selectedNodeId = document.selectedNodeIds[0]
   const selectedNode = selectedNodeId ? document.nodes[selectedNodeId] : null
   const ungroupSelectedNode = useEditorStore((state) => state.ungroupSelectedNode)
@@ -70,6 +72,13 @@ export function Toolbar() {
         矩形
       </button>
       <button
+        className="rounded-md border border-amber-300 px-3 py-2 text-sm text-amber-700"
+        onClick={addFrameNode}
+        type="button"
+      >
+        Frame
+      </button>
+      <button
         className="rounded-md border border-rose-200 px-3 py-2 text-sm text-rose-700 disabled:cursor-not-allowed disabled:opacity-40"
         disabled={selectedCount === 0}
         onClick={deleteSelectedNode}
@@ -100,6 +109,14 @@ export function Toolbar() {
         type="button"
       >
         组合
+      </button>
+      <button
+        className="rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700 disabled:cursor-not-allowed disabled:opacity-40"
+        disabled={selectedCount < 2}
+        onClick={frameSelectedNodes}
+        type="button"
+      >
+        成 Frame
       </button>
       <button
         className="rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700 disabled:cursor-not-allowed disabled:opacity-40"
