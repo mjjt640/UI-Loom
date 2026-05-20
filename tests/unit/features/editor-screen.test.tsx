@@ -1,8 +1,15 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { createEmptyDocument } from '../../../src/domain/model/factories'
 import { EditorScreen } from '../../../src/features/editor/EditorScreen'
+import { useEditorStore } from '../../../src/store/editorStore'
 
 describe('EditorScreen', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    useEditorStore.setState({ document: createEmptyDocument('Test Page') })
+  })
+
   it('renders toolbar and panels', () => {
     render(<EditorScreen />)
     expect(screen.getByText('图层')).toBeInTheDocument()

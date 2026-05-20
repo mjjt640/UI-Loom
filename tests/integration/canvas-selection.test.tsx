@@ -1,9 +1,16 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { createEmptyDocument } from '../../src/domain/model/factories'
 import { EditorScreen } from '../../src/features/editor/EditorScreen'
+import { useEditorStore } from '../../src/store/editorStore'
 
 describe('canvas selection', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    useEditorStore.setState({ document: createEmptyDocument('Test Page') })
+  })
+
   it('selects a text node when clicked', async () => {
     const user = userEvent.setup()
     render(<EditorScreen />)

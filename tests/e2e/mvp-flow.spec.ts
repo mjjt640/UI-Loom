@@ -6,3 +6,26 @@ test('user can add text and see exported code', async ({ page }) => {
   await expect(page.getByRole('button', { name: '新文本' })).toBeVisible()
   await expect(page.getByText('GeneratedPage')).toBeVisible()
 })
+
+test('user can add basic nodes, edit image alt, and delete a node', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: '新增按钮' }).click()
+  await page.getByRole('button', { name: '新增图片' }).click()
+  await page.getByRole('button', { name: '新增容器' }).click()
+
+  await expect(page.getByRole('button', { name: '按钮', exact: true })).toBeVisible()
+  await expect(page.getByRole('img', { name: '图片描述' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '容器节点' })).toBeVisible()
+
+  await page.getByRole('img', { name: '图片描述' }).click()
+  await page.getByRole('textbox', { name: '图片描述' }).fill('产品截图')
+  await expect(page.getByRole('img', { name: '产品截图' })).toBeVisible()
+
+  await page.getByRole('button', { name: '按钮', exact: true }).click()
+  await page.getByRole('button', { name: '删除节点' }).click()
+  await expect(page.getByRole('button', { name: '按钮', exact: true })).toHaveCount(0)
+  await expect(page.getByText('<img')).toBeVisible()
+  await expect(page.getByText('<div')).toBeVisible()
+})

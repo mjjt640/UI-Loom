@@ -6,6 +6,9 @@ export function InspectorPanel() {
   const updateSelectedNodeContent = useEditorStore(
     (state) => state.updateSelectedNodeContent,
   )
+  const updateSelectedNodeStyle = useEditorStore(
+    (state) => state.updateSelectedNodeStyle,
+  )
   const selectedNodeId = document.selectedNodeIds[0]
   const selectedNode = selectedNodeId ? document.nodes[selectedNodeId] : null
   const selectedCount = document.selectedNodeIds.length
@@ -27,6 +30,69 @@ export function InspectorPanel() {
                 value={selectedNode.content.text ?? ''}
               />
             </label>
+          ) : null}
+          {selectedNode?.type === 'button' ? (
+            <label className="flex flex-col gap-2 text-sm text-stone-600">
+              <span>按钮文本</span>
+              <input
+                className="rounded-md border border-stone-300 px-3 py-2"
+                onChange={(event) =>
+                  updateSelectedNodeContent({ text: event.target.value })
+                }
+                value={selectedNode.content.text ?? ''}
+              />
+            </label>
+          ) : null}
+          {selectedNode?.type === 'image' ? (
+            <div className="space-y-3">
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>图片地址</span>
+                <input
+                  className="rounded-md border border-stone-300 px-3 py-2"
+                  onChange={(event) =>
+                    updateSelectedNodeContent({ src: event.target.value })
+                  }
+                  value={selectedNode.content.src ?? ''}
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>图片描述</span>
+                <input
+                  className="rounded-md border border-stone-300 px-3 py-2"
+                  onChange={(event) =>
+                    updateSelectedNodeContent({ alt: event.target.value })
+                  }
+                  value={selectedNode.content.alt ?? ''}
+                />
+              </label>
+            </div>
+          ) : null}
+          {selectedNode?.type === 'container' ? (
+            <div className="space-y-3">
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>背景颜色</span>
+                <input
+                  className="rounded-md border border-stone-300 px-3 py-2"
+                  onChange={(event) =>
+                    updateSelectedNodeStyle({ background: event.target.value })
+                  }
+                  value={selectedNode.style.background ?? ''}
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>圆角</span>
+                <input
+                  className="rounded-md border border-stone-300 px-3 py-2"
+                  inputMode="numeric"
+                  onChange={(event) =>
+                    updateSelectedNodeStyle({
+                      radius: Number(event.target.value) || 0,
+                    })
+                  }
+                  value={selectedNode.style.radius ?? 0}
+                />
+              </label>
+            </div>
           ) : null}
         </div>
       ) : (
