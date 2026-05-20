@@ -1,4 +1,5 @@
 import { useEditorStore } from '../../../store/editorStore'
+import { CodePreviewPanel } from '../../preview/CodePreviewPanel'
 
 export function InspectorPanel() {
   const document = useEditorStore((state) => state.document)
@@ -31,6 +32,7 @@ export function InspectorPanel() {
       ) : (
         <p className="text-sm text-stone-500">选择节点后编辑内容与样式。</p>
       )}
+      <CodePreviewPanel />
     </aside>
   )
 }
