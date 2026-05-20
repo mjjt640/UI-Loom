@@ -1,7 +1,9 @@
 export type NodeType =
   | 'page'
   | 'frame'
+  | 'group'
   | 'container'
+  | 'rect'
   | 'text'
   | 'image'
   | 'button'

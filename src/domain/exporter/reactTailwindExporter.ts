@@ -20,6 +20,33 @@ function className(...values: string[]) {
   return values.filter(Boolean).join(' ')
 }
 
+function resolveRenderableNode(document: PageDocument, nodeId: string) {
+  const node = document.nodes[nodeId]
+
+  if (!node) {
+    throw new Error(`Export node not found: ${nodeId}`)
+  }
+
+  if (
+    node.type !== 'text' &&
+    node.type !== 'button' &&
+    node.type !== 'image' &&
+    node.type !== 'container' &&
+    node.type !== 'rect' &&
+    node.type !== 'group'
+  ) {
+    throw new Error(`React Tailwind export does not support node type: ${node.type}`)
+  }
+
+  return node
+}
+
+function visibleChildNodes(document: PageDocument, node: UINode) {
+  return node.children
+    .map((childId) => resolveRenderableNode(document, childId))
+    .filter((childNode) => childNode.meta.visible !== false)
+}
+
 function renderNode(document: PageDocument, node: UINode): string {
   if (node.type === 'text') {
     return `      <div className="${textStyleToClassName(node.style)}">${escapeText(
@@ -39,10 +66,14 @@ function renderNode(document: PageDocument, node: UINode): string {
     )}" src="${escapeText(node.content.src)}" alt="${escapeText(node.content.alt)}" />`
   }
 
+  if (node.type === 'rect') {
+    return `      <div aria-label="矩形图层" className="${boxStyleToClassName(
+      node.style,
+    )}"></div>`
+  }
+
   if (node.type === 'container') {
-    const children = node.children
-      .map((childId) => document.nodes[childId])
-      .filter(Boolean)
+    const children = visibleChildNodes(document, node)
       .map((childNode) => renderNode(document, childNode))
       .join('\n')
     const classes = className(
@@ -60,15 +91,26 @@ function renderNode(document: PageDocument, node: UINode): string {
     )
   }
 
-  return ''
+  if (node.type === 'group') {
+    const children = visibleChildNodes(document, node)
+      .map((childNode) => renderNode(document, childNode))
+      .join('\n')
+
+    if (!children) {
+      return '      <div aria-label="图层组"></div>'
+    }
+
+    return ['      <div aria-label="图层组">', indent(children), '      </div>'].join(
+      '\n',
+    )
+  }
+
+  throw new Error(`React Tailwind export does not support node type: ${node.type}`)
 }
 
 export function exportToReactTailwind(document: PageDocument) {
-  const body = document.nodes[document.rootNodeId].children
-    .map((nodeId) => document.nodes[nodeId])
-    .filter(Boolean)
+  const body = visibleChildNodes(document, document.nodes[document.rootNodeId])
     .map((node) => renderNode(document, node))
-    .filter(Boolean)
     .join('\n')
 
   return [

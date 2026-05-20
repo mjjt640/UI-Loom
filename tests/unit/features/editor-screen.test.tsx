@@ -14,6 +14,7 @@ describe('EditorScreen', () => {
     render(<EditorScreen />)
     expect(screen.getByText('图层')).toBeInTheDocument()
     expect(screen.getByText('属性')).toBeInTheDocument()
-    expect(screen.getByText('导出 React')).toBeInTheDocument()
+    expect(screen.getByLabelText('导出格式')).toBeInTheDocument()
+    expect(screen.getByText('导出代码')).toBeInTheDocument()
   })
 })

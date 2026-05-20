@@ -1,6 +1,22 @@
 import { createId } from '../../utils/id'
 import type { LayoutProps, PageDocument, UINode } from '../model/types'
 
+type AlignableNode = UINode & {
+  layout: UINode['layout'] & {
+    width: number
+    x: number
+  }
+}
+
+type AbsoluteLayerNode = UINode & {
+  layout: UINode['layout'] & {
+    height: number
+    width: number
+    x: number
+    y: number
+  }
+}
+
 export function createTextNode(text: string): UINode {
   return {
     id: createId(),
@@ -79,6 +95,39 @@ export function createContainerNode(): UINode {
   }
 }
 
+export function createRectNode(): UINode {
+  return {
+    id: createId(),
+    type: 'rect',
+    name: 'Rectangle',
+    parentId: null,
+    children: [],
+    layout: { mode: 'absolute', x: 96, y: 96, width: 160, height: 120 },
+    style: {
+      background: '#dbeafe',
+      radius: 18,
+      borderWidth: 1,
+      borderColor: '#60a5fa',
+    },
+    content: {},
+    meta: {},
+  }
+}
+
+function createGroupNode(layout: LayoutProps): UINode {
+  return {
+    id: createId(),
+    type: 'group',
+    name: 'Group',
+    parentId: null,
+    children: [],
+    layout,
+    style: {},
+    content: {},
+    meta: {},
+  }
+}
+
 export function insertChildNode(
   document: PageDocument,
   parentId: string,
@@ -130,6 +179,405 @@ export function updateNodeLayout(
         },
       },
     },
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+function updateNodeMeta(
+  document: PageDocument,
+  nodeId: string,
+  meta: Partial<UINode['meta']>,
+): PageDocument {
+  const node = document.nodes[nodeId]
+
+  if (!node) {
+    throw new Error(`Node not found: ${nodeId}`)
+  }
+
+  return {
+    ...document,
+    nodes: {
+      ...document.nodes,
+      [nodeId]: {
+        ...node,
+        meta: {
+          ...node.meta,
+          ...meta,
+        },
+      },
+    },
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+export function setNodeVisible(
+  document: PageDocument,
+  nodeId: string,
+  visible: boolean,
+): PageDocument {
+  const next = updateNodeMeta(document, nodeId, { visible })
+
+  return visible
+    ? next
+    : {
+        ...next,
+        selectedNodeIds: next.selectedNodeIds.filter((id) => id !== nodeId),
+      }
+}
+
+export function setNodeLocked(
+  document: PageDocument,
+  nodeId: string,
+  locked: boolean,
+): PageDocument {
+  const next = updateNodeMeta(document, nodeId, { locked })
+
+  return locked
+    ? {
+        ...next,
+        selectedNodeIds: next.selectedNodeIds.filter((id) => id !== nodeId),
+      }
+    : next
+}
+
+function moveChildInParent(
+  document: PageDocument,
+  nodeId: string,
+  direction: 'forward' | 'backward',
+): PageDocument {
+  const node = document.nodes[nodeId]
+
+  if (!node?.parentId) {
+    throw new Error(`Node parent not found: ${nodeId}`)
+  }
+
+  const parent = document.nodes[node.parentId]
+
+  if (!parent) {
+    throw new Error(`Parent node not found: ${node.parentId}`)
+  }
+
+  const currentIndex = parent.children.indexOf(nodeId)
+
+  if (currentIndex === -1) {
+    throw new Error(`Node is not a child of parent: ${nodeId}`)
+  }
+
+  const nextIndex =
+    direction === 'forward' ? currentIndex + 1 : currentIndex - 1
+
+  if (nextIndex < 0 || nextIndex >= parent.children.length) {
+    return document
+  }
+
+  const nextChildren = [...parent.children]
+  const [movedNodeId] = nextChildren.splice(currentIndex, 1)
+  nextChildren.splice(nextIndex, 0, movedNodeId)
+
+  return {
+    ...document,
+    nodes: {
+      ...document.nodes,
+      [parent.id]: {
+        ...parent,
+        children: nextChildren,
+      },
+    },
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+export function moveNodeForward(document: PageDocument, nodeId: string): PageDocument {
+  return moveChildInParent(document, nodeId, 'forward')
+}
+
+export function moveNodeBackward(
+  document: PageDocument,
+  nodeId: string,
+): PageDocument {
+  return moveChildInParent(document, nodeId, 'backward')
+}
+
+function assertAlignableNode(node: UINode): asserts node is AlignableNode {
+  if (typeof node.layout.x !== 'number' || typeof node.layout.width !== 'number') {
+    throw new Error(`Node cannot be aligned: ${node.id}`)
+  }
+}
+
+function selectedAbsoluteNodes(document: PageDocument): AlignableNode[] {
+  return document.selectedNodeIds.map((nodeId) => {
+    const node = document.nodes[nodeId]
+
+    if (!node) {
+      throw new Error(`Node not found: ${nodeId}`)
+    }
+
+    assertAlignableNode(node)
+
+    return node
+  })
+}
+
+export function alignNodesLeft(document: PageDocument): PageDocument {
+  const nodes = selectedAbsoluteNodes(document)
+
+  if (nodes.length < 2) {
+    return document
+  }
+
+  const left = Math.min(...nodes.map((node) => node.layout.x))
+  const nextNodes = Object.fromEntries(
+    nodes.map((node) => [
+      node.id,
+      {
+        ...node,
+        layout: {
+          ...node.layout,
+          x: left,
+        },
+      },
+    ]),
+  )
+
+  return {
+    ...document,
+    nodes: {
+      ...document.nodes,
+      ...nextNodes,
+    },
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+export function distributeNodesHorizontally(document: PageDocument): PageDocument {
+  const nodes = selectedAbsoluteNodes(document)
+
+  if (nodes.length < 3) {
+    return document
+  }
+
+  const left = Math.min(...nodes.map((node) => node.layout.x))
+  const right = Math.max(...nodes.map((node) => node.layout.x))
+  const step = (right - left) / (nodes.length - 1)
+  const nextNodes = Object.fromEntries(
+    nodes.map((node, index) => [
+      node.id,
+      {
+        ...node,
+        layout: {
+          ...node.layout,
+          x: left + step * index,
+        },
+      },
+    ]),
+  )
+
+  return {
+    ...document,
+    nodes: {
+      ...document.nodes,
+      ...nextNodes,
+    },
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+function assertAbsoluteLayer(node: UINode): asserts node is AbsoluteLayerNode {
+  if (
+    typeof node.layout.x !== 'number' ||
+    typeof node.layout.y !== 'number' ||
+    typeof node.layout.width !== 'number' ||
+    typeof node.layout.height !== 'number'
+  ) {
+    throw new Error(`Node cannot be grouped: ${node.id}`)
+  }
+}
+
+function resolveAbsoluteLayer(
+  document: PageDocument,
+  nodeId: string,
+  errorMessage: string,
+): AbsoluteLayerNode {
+  const node = document.nodes[nodeId]
+
+  if (!node) {
+    throw new Error(errorMessage)
+  }
+
+  assertAbsoluteLayer(node)
+  return node
+}
+
+export function groupSelectedNodes(document: PageDocument): PageDocument {
+  if (document.selectedNodeIds.length < 2) {
+    return document
+  }
+
+  const selectedIds = new Set(document.selectedNodeIds)
+  const selectedNodes = document.selectedNodeIds.map((nodeId) => {
+    const node = document.nodes[nodeId]
+
+    if (!node || node.id === document.rootNodeId || !node.parentId) {
+      throw new Error(`Node cannot be grouped: ${nodeId}`)
+    }
+
+    assertAbsoluteLayer(node)
+
+    return node
+  })
+  const parentId = selectedNodes[0].parentId
+
+  if (!parentId || selectedNodes.some((node) => node.parentId !== parentId)) {
+    throw new Error('Cannot group nodes from different parents')
+  }
+
+  const parent = document.nodes[parentId]
+
+  if (!parent) {
+    throw new Error(`Parent node not found: ${parentId}`)
+  }
+
+  const orderedSelectedNodes: AbsoluteLayerNode[] = parent.children
+    .filter((childId) => selectedIds.has(childId))
+    .map((childId) =>
+      resolveAbsoluteLayer(
+        document,
+        childId,
+        `Selected child node not found: ${childId}`,
+      ),
+    )
+
+  if (orderedSelectedNodes.length !== selectedNodes.length) {
+    throw new Error('Selected nodes are not direct siblings')
+  }
+
+  const left = Math.min(...orderedSelectedNodes.map((node) => node.layout.x))
+  const top = Math.min(...orderedSelectedNodes.map((node) => node.layout.y))
+  const right = Math.max(
+    ...orderedSelectedNodes.map(
+      (node) => node.layout.x + node.layout.width,
+    ),
+  )
+  const bottom = Math.max(
+    ...orderedSelectedNodes.map(
+      (node) => node.layout.y + node.layout.height,
+    ),
+  )
+  const groupNode = createGroupNode({
+    mode: 'absolute',
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  })
+  const firstSelectedIndex = parent.children.findIndex((childId) =>
+    selectedIds.has(childId),
+  )
+  const nextParentChildren = parent.children.filter(
+    (childId) => !selectedIds.has(childId),
+  )
+
+  nextParentChildren.splice(firstSelectedIndex, 0, groupNode.id)
+
+  const groupedChildren = Object.fromEntries(
+    orderedSelectedNodes.map((node) => [
+      node.id,
+      {
+        ...node,
+        parentId: groupNode.id,
+        layout: {
+          ...node.layout,
+          x: node.layout.x - left,
+          y: node.layout.y - top,
+        },
+      },
+    ]),
+  )
+
+  return {
+    ...document,
+    nodes: {
+      ...document.nodes,
+      [parent.id]: {
+        ...parent,
+        children: nextParentChildren,
+      },
+      [groupNode.id]: {
+        ...groupNode,
+        parentId,
+        children: orderedSelectedNodes.map((node) => node.id),
+      },
+      ...groupedChildren,
+    },
+    selectedNodeIds: [groupNode.id],
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+export function ungroupSelectedNode(document: PageDocument): PageDocument {
+  const [groupId] = document.selectedNodeIds
+  const group = groupId ? document.nodes[groupId] : null
+
+  if (!group || group.type !== 'group' || !group.parentId) {
+    return document
+  }
+
+  assertAbsoluteLayer(group)
+
+  const parent = document.nodes[group.parentId]
+
+  if (!parent) {
+    throw new Error(`Parent node not found: ${group.parentId}`)
+  }
+
+  const childNodes = group.children.map((childId) => {
+    const child = document.nodes[childId]
+
+    if (!child) {
+      throw new Error(`Group child not found: ${childId}`)
+    }
+
+    assertAbsoluteLayer(child)
+
+    return child
+  })
+  const groupIndex = parent.children.indexOf(group.id)
+
+  if (groupIndex === -1) {
+    throw new Error(`Group is not a child of parent: ${group.id}`)
+  }
+
+  const nextParentChildren = parent.children.filter((childId) => childId !== group.id)
+  nextParentChildren.splice(groupIndex, 0, ...group.children)
+
+  const nextNodes = {
+    ...document.nodes,
+    [parent.id]: {
+      ...parent,
+      children: nextParentChildren,
+    },
+    ...Object.fromEntries(
+      childNodes.map((child) => [
+        child.id,
+        {
+          ...child,
+          parentId: parent.id,
+          layout: {
+            ...child.layout,
+            x: group.layout.x + child.layout.x,
+            y: group.layout.y + child.layout.y,
+          },
+        },
+      ]),
+    ),
+  }
+
+  delete nextNodes[group.id]
+
+  return {
+    ...document,
+    nodes: nextNodes,
+    selectedNodeIds: group.children,
     updatedAt: new Date().toISOString(),
   }
 }

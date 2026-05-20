@@ -8,8 +8,33 @@ interface CanvasNodeProps {
   onSelect: (nodeId: string) => void
 }
 
+function assertNumericSize(node: UINode) {
+  if (
+    typeof node.layout.width !== 'number' ||
+    typeof node.layout.height !== 'number'
+  ) {
+    throw new Error(`Node ${node.id} does not have numeric size`)
+  }
+
+  return {
+    width: node.layout.width,
+    height: node.layout.height,
+  }
+}
+
+function assertNumericPosition(node: UINode) {
+  if (typeof node.layout.x !== 'number' || typeof node.layout.y !== 'number') {
+    throw new Error(`Node ${node.id} does not have numeric position`)
+  }
+
+  return {
+    x: node.layout.x,
+    y: node.layout.y,
+  }
+}
+
 function flexStyle(node: UINode) {
-  if (node.layout.mode === 'absolute') {
+  if (node.layout.mode === 'absolute' || node.type === 'group') {
     return {}
   }
 
@@ -45,7 +70,11 @@ export function CanvasNode({
   onSelect,
 }: CanvasNodeProps) {
   const selectionClass = selected ? 'outline outline-2 outline-sky-500' : ''
-  const canDrag = node.parentId === document.rootNodeId && node.layout.mode === 'absolute'
+  const canInteract = !node.meta.locked && node.meta.visible !== false
+  const canDrag =
+    canInteract &&
+    node.parentId === document.rootNodeId &&
+    node.layout.mode === 'absolute'
   const absoluteStyle = {
     cursor: canDrag ? 'grab' : undefined,
     height: node.layout.height === 'hug' ? undefined : node.layout.height,
@@ -66,15 +95,14 @@ export function CanvasNode({
     const target = event.currentTarget
     const startClientX = event.clientX
     const startClientY = event.clientY
-    const startX = node.layout.x ?? 0
-    const startY = node.layout.y ?? 0
+    const startPosition = assertNumericPosition(node)
 
     target.setPointerCapture?.(event.pointerId)
 
     const handlePointerMove = (moveEvent: PointerEvent) => {
       onDragNode({
-        x: startX + moveEvent.clientX - startClientX,
-        y: startY + moveEvent.clientY - startClientY,
+        x: startPosition.x + moveEvent.clientX - startClientX,
+        y: startPosition.y + moveEvent.clientY - startClientY,
       })
     }
     const handlePointerUp = () => {
@@ -88,15 +116,66 @@ export function CanvasNode({
     window.addEventListener('pointerup', handlePointerUp)
     window.addEventListener('pointercancel', handlePointerUp)
   }
+  const canResize =
+    canInteract &&
+    selected &&
+    node.layout.mode === 'absolute' &&
+    typeof node.layout.width === 'number' &&
+    typeof node.layout.height === 'number'
+  const startResize = (event: React.PointerEvent<HTMLSpanElement>) => {
+    if (!canResize) {
+      return
+    }
+
+    event.preventDefault()
+    event.stopPropagation()
+    onSelect(node.id)
+
+    const target = event.currentTarget
+    const startClientX = event.clientX
+    const startClientY = event.clientY
+    const startSize = assertNumericSize(node)
+
+    target.setPointerCapture?.(event.pointerId)
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      onDragNode({
+        width: Math.max(8, startSize.width + moveEvent.clientX - startClientX),
+        height: Math.max(8, startSize.height + moveEvent.clientY - startClientY),
+      })
+    }
+    const handlePointerUp = () => {
+      target.releasePointerCapture?.(event.pointerId)
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+      window.removeEventListener('pointercancel', handlePointerUp)
+    }
+
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+    window.addEventListener('pointercancel', handlePointerUp)
+  }
+  const resizeHandle = canResize ? (
+    <span
+      aria-label="调整右下尺寸"
+      className="absolute -bottom-1.5 -right-1.5 h-3 w-3 cursor-se-resize rounded-full border border-white bg-sky-500"
+      onPointerDown={startResize}
+      role="slider"
+      tabIndex={0}
+    />
+  ) : null
+  const selectCurrentNode = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation()
+    if (canInteract) {
+      onSelect(node.id)
+    }
+  }
 
   if (node.type === 'text') {
     return (
       <button
         className={`text-left ${selectionClass}`}
-        onClick={(event) => {
-          event.stopPropagation()
-          onSelect(node.id)
-        }}
+        onClick={selectCurrentNode}
         onPointerDown={startDrag}
         style={{
           ...absoluteStyle,
@@ -107,6 +186,7 @@ export function CanvasNode({
         type="button"
       >
         {node.content.text}
+        {resizeHandle}
       </button>
     )
   }
@@ -115,10 +195,7 @@ export function CanvasNode({
     return (
       <button
         className={selectionClass}
-        onClick={(event) => {
-          event.stopPropagation()
-          onSelect(node.id)
-        }}
+        onClick={selectCurrentNode}
         onPointerDown={startDrag}
         style={{
           ...absoluteStyle,
@@ -131,6 +208,7 @@ export function CanvasNode({
         type="button"
       >
         {node.content.text}
+        {resizeHandle}
       </button>
     )
   }
@@ -140,10 +218,7 @@ export function CanvasNode({
       <button
         aria-label={node.content.alt ?? '图片描述'}
         className={`absolute block overflow-hidden bg-stone-100 ${selectionClass}`}
-        onClick={(event) => {
-          event.stopPropagation()
-          onSelect(node.id)
-        }}
+        onClick={selectCurrentNode}
         onPointerDown={startDrag}
         style={{
           ...absoluteStyle,
@@ -151,27 +226,49 @@ export function CanvasNode({
         }}
         type="button"
       >
-        <img
-          alt={node.content.alt ?? ''}
-          className="h-full w-full object-cover"
-          src={
-            node.content.src ||
-            'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200"%3E%3Crect width="320" height="200" fill="%23e7e5e4"/%3E%3Cpath d="M92 128l42-44 32 32 22-22 40 34H92z" fill="%23a8a29e"/%3E%3Ccircle cx="214" cy="70" r="18" fill="%23a8a29e"/%3E%3C/svg%3E'
-          }
-        />
+        {node.content.src ? (
+          <img
+            alt={node.content.alt ?? ''}
+            className="h-full w-full object-cover"
+            src={node.content.src}
+          />
+        ) : null}
+        {resizeHandle}
       </button>
     )
   }
 
-  if (node.type === 'container') {
+  if (node.type === 'rect') {
+    return (
+      <button
+        aria-label="矩形图层"
+        className={`block ${selectionClass}`}
+        onClick={selectCurrentNode}
+        onPointerDown={startDrag}
+        style={{
+          ...absoluteStyle,
+          background: node.style.background,
+          borderColor: node.style.borderColor,
+          borderRadius: node.style.radius,
+          borderWidth: node.style.borderWidth,
+        }}
+        type="button"
+      >
+        {resizeHandle}
+      </button>
+    )
+  }
+
+  if (node.type === 'container' || node.type === 'group') {
     return (
       <div
-        aria-label="容器节点"
-        className={`border text-sm text-stone-500 ${selectionClass}`}
-        onClick={(event) => {
-          event.stopPropagation()
-          onSelect(node.id)
-        }}
+        aria-label={node.type === 'group' ? '图层组' : '容器节点'}
+        className={
+          node.type === 'group'
+            ? `text-sm text-stone-500 ${selectionClass}`
+            : `border text-sm text-stone-500 ${selectionClass}`
+        }
+        onClick={selectCurrentNode}
         onPointerDown={startDrag}
         role="group"
         style={{
@@ -183,12 +280,14 @@ export function CanvasNode({
           ...flexStyle(node),
         }}
       >
+        {resizeHandle}
         {node.children.length === 0 ? (
           <span className="self-center">容器</span>
         ) : (
           node.children
             .map((childId) => document.nodes[childId])
             .filter(Boolean)
+            .filter((childNode) => childNode.meta.visible !== false)
             .map((childNode) => (
               <CanvasNode
                 key={childNode.id}
@@ -204,5 +303,9 @@ export function CanvasNode({
     )
   }
 
-  return null
+  if (node.type === 'page') {
+    throw new Error('Page nodes are rendered by CanvasViewport')
+  }
+
+  throw new Error(`Canvas does not support node type: ${node.type}`)
 }

@@ -87,7 +87,7 @@ export function InspectorPanel() {
                   }
                 />
               </label>
-              {selectedNode.type !== 'container' ? (
+              {selectedNode.type !== 'container' && selectedNode.type !== 'rect' ? (
                 <button
                   className="col-span-2 rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700"
                   onClick={moveSelectedNodeToFirstContainer}
@@ -146,7 +146,7 @@ export function InspectorPanel() {
               </label>
             </div>
           ) : null}
-          {selectedNode?.type === 'container' ? (
+          {selectedNode?.type === 'container' || selectedNode?.type === 'rect' ? (
             <div className="space-y-3">
               <label className="flex flex-col gap-2 text-sm text-stone-600">
                 <span>背景颜色</span>
