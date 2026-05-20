@@ -8,7 +8,7 @@ import {
   setNodeLocked,
   setNodeVisible,
 } from '../../../src/domain/commands/editorCommands'
-import { exportToReactTailwind } from '../../../src/domain/exporter/reactTailwindExporter'
+import { exportToReactTailwindBundle } from '../../../src/domain/exporter/reactTailwindBundleExporter'
 import { createEmptyDocument } from '../../../src/domain/model/factories'
 
 describe('layer commands', () => {
@@ -37,9 +37,11 @@ describe('layer commands', () => {
     const button = createButtonNode('隐藏按钮')
     const withButton = insertChildNode(document, document.rootNodeId, button)
     const hidden = setNodeVisible(withButton, button.id, false)
+    const bundle = exportToReactTailwindBundle(hidden)
+    const code = bundle.files.map((file) => file.content).join('\n')
 
     expect(hidden.nodes[button.id].meta.visible).toBe(false)
-    expect(exportToReactTailwind(hidden)).not.toContain('隐藏按钮')
+    expect(code).not.toContain('隐藏按钮')
   })
 
   it('stores layer locked state and clears selection when the selected layer is locked', () => {

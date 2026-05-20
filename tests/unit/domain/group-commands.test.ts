@@ -7,7 +7,7 @@ import {
   selectNodes,
   ungroupSelectedNode,
 } from '../../../src/domain/commands/editorCommands'
-import { exportToReactTailwind } from '../../../src/domain/exporter/reactTailwindExporter'
+import { exportToReactTailwindBundle } from '../../../src/domain/exporter/reactTailwindBundleExporter'
 import { createEmptyDocument } from '../../../src/domain/model/factories'
 
 describe('group commands', () => {
@@ -67,8 +67,10 @@ describe('group commands', () => {
     const withRect = insertChildNode(document, document.rootNodeId, rect)
     const withButton = insertChildNode(withRect, withRect.rootNodeId, button)
     const grouped = groupSelectedNodes(selectNodes(withButton, [rect.id, button.id]))
+    const bundle = exportToReactTailwindBundle(grouped)
+    const code = bundle.files.map((file) => file.content).join('\n')
 
-    expect(exportToReactTailwind(grouped)).toContain('购买')
-    expect(exportToReactTailwind(grouped)).toContain('aria-label="图层组"')
+    expect(code).toContain('购买')
+    expect(code).toContain('aria-label="图层组"')
   })
 })

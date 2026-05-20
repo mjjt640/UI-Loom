@@ -8,9 +8,9 @@ type HtmlRenderableNodeType =
   | 'frame'
   | 'rect'
   | 'group'
-type HtmlRenderableNode = UINode & { type: HtmlRenderableNodeType }
+export type HtmlRenderableNode = UINode & { type: HtmlRenderableNodeType }
 
-function isHtmlRenderableNode(node: UINode): node is HtmlRenderableNode {
+export function isHtmlRenderableNode(node: UINode): node is HtmlRenderableNode {
   return (
     node.type === 'text' ||
     node.type === 'button' ||
@@ -213,7 +213,7 @@ function renderHtmlNode(document: PageDocument, node: HtmlRenderableNode): strin
   throw new Error(`HTML export does not support node type: ${node.type}`)
 }
 
-function renderCssRule(
+export function renderCssRule(
   document: PageDocument,
   node: HtmlRenderableNode,
   isRootChild: boolean,

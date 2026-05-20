@@ -1,3 +1,4 @@
+import type { ExportTargetId } from '../../../domain/exporter/exportTypes'
 import { useEditorStore } from '../../../store/editorStore'
 import { CodePreviewPanel } from '../../preview/CodePreviewPanel'
 
@@ -5,7 +6,11 @@ function numericInputValue(value: number | 'hug' | 'fill' | undefined) {
   return typeof value === 'number' ? value : 0
 }
 
-export function InspectorPanel() {
+interface InspectorPanelProps {
+  exportTargetId: ExportTargetId
+}
+
+export function InspectorPanel({ exportTargetId }: InspectorPanelProps) {
   const document = useEditorStore((state) => state.document)
   const updateSelectedNodeContent = useEditorStore(
     (state) => state.updateSelectedNodeContent,
@@ -283,7 +288,7 @@ export function InspectorPanel() {
       ) : (
         <p className="text-sm text-stone-500">选择节点后编辑内容与样式。</p>
       )}
-      <CodePreviewPanel />
+      <CodePreviewPanel exportTargetId={exportTargetId} />
     </aside>
   )
 }

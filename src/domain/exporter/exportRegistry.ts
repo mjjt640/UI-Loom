@@ -14,7 +14,7 @@ export const exportTargets: ExportTargetDefinition[] = [
   {
     id: 'vue3-sfc',
     label: 'Vue 3 SFC',
-    description: '生成 GeneratedPage.vue 单文件组件',
+    description: '生成 Vue 3 页面组件和子组件文件',
   },
   {
     id: 'react-tailwind',
