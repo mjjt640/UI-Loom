@@ -42,3 +42,14 @@ export function insertChildNode(
     },
   }
 }
+
+export function selectNodes(
+  document: PageDocument,
+  selectedNodeIds: string[],
+): PageDocument {
+  return {
+    ...document,
+    selectedNodeIds,
+    updatedAt: new Date().toISOString(),
+  }
+}
