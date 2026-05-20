@@ -4,6 +4,9 @@ import { CanvasNode } from './CanvasNode'
 export function CanvasViewport() {
   const document = useEditorStore((state) => state.document)
   const selectNode = useEditorStore((state) => state.selectNode)
+  const updateSelectedNodeLayout = useEditorStore(
+    (state) => state.updateSelectedNodeLayout,
+  )
 
   return (
     <div className="relative h-full overflow-auto rounded-xl border border-stone-200 bg-white shadow-sm">
@@ -16,6 +19,7 @@ export function CanvasViewport() {
               key={node.id}
               document={document}
               node={node}
+              onDragNode={(layout) => updateSelectedNodeLayout(layout)}
               onSelect={selectNode}
               selected={document.selectedNodeIds.includes(node.id)}
             />

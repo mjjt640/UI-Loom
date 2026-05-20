@@ -28,6 +28,27 @@ describe('layout and nesting flow', () => {
     })
   })
 
+  it('drags a top-level node and persists its position', async () => {
+    const user = userEvent.setup()
+    render(<EditorScreen />)
+
+    await user.click(screen.getByText('新增按钮'))
+    const button = screen.getByRole('button', { name: '按钮' })
+
+    await user.pointer([
+      { keys: '[MouseLeft>]', target: button, coords: { x: 40, y: 72 } },
+      { coords: { x: 140, y: 132 } },
+      { keys: '[/MouseLeft]' },
+    ])
+
+    expect(button).toHaveStyle({
+      left: '140px',
+      top: '132px',
+    })
+    expect(screen.getByLabelText('X')).toHaveValue('140')
+    expect(screen.getByLabelText('Y')).toHaveValue('132')
+  })
+
   it('moves a selected button into the first container and renders it inside', async () => {
     const user = userEvent.setup()
     render(<EditorScreen />)

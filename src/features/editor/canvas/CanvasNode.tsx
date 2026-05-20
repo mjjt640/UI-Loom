@@ -1,8 +1,9 @@
-import type { PageDocument, UINode } from '../../../domain/model/types'
+import type { LayoutProps, PageDocument, UINode } from '../../../domain/model/types'
 
 interface CanvasNodeProps {
   document: PageDocument
   node: UINode
+  onDragNode: (layout: Partial<LayoutProps>) => void
   selected: boolean
   onSelect: (nodeId: string) => void
 }
@@ -36,15 +37,57 @@ function flexStyle(node: UINode) {
   } as const
 }
 
-export function CanvasNode({ document, node, selected, onSelect }: CanvasNodeProps) {
+export function CanvasNode({
+  document,
+  node,
+  onDragNode,
+  selected,
+  onSelect,
+}: CanvasNodeProps) {
   const selectionClass = selected ? 'outline outline-2 outline-sky-500' : ''
+  const canDrag = node.parentId === document.rootNodeId && node.layout.mode === 'absolute'
   const absoluteStyle = {
+    cursor: canDrag ? 'grab' : undefined,
     height: node.layout.height === 'hug' ? undefined : node.layout.height,
     left: node.layout.x,
     position: node.parentId === document.rootNodeId ? 'absolute' : undefined,
     top: node.layout.y,
     width: node.layout.width === 'hug' ? undefined : node.layout.width,
   } as const
+  const startDrag = (event: React.PointerEvent<HTMLElement>) => {
+    if (!canDrag) {
+      return
+    }
+
+    event.preventDefault()
+    event.stopPropagation()
+    onSelect(node.id)
+
+    const target = event.currentTarget
+    const startClientX = event.clientX
+    const startClientY = event.clientY
+    const startX = node.layout.x ?? 0
+    const startY = node.layout.y ?? 0
+
+    target.setPointerCapture?.(event.pointerId)
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      onDragNode({
+        x: startX + moveEvent.clientX - startClientX,
+        y: startY + moveEvent.clientY - startClientY,
+      })
+    }
+    const handlePointerUp = () => {
+      target.releasePointerCapture?.(event.pointerId)
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+      window.removeEventListener('pointercancel', handlePointerUp)
+    }
+
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+    window.addEventListener('pointercancel', handlePointerUp)
+  }
 
   if (node.type === 'text') {
     return (
@@ -54,6 +97,7 @@ export function CanvasNode({ document, node, selected, onSelect }: CanvasNodePro
           event.stopPropagation()
           onSelect(node.id)
         }}
+        onPointerDown={startDrag}
         style={{
           ...absoluteStyle,
           color: node.style.color,
@@ -75,6 +119,7 @@ export function CanvasNode({ document, node, selected, onSelect }: CanvasNodePro
           event.stopPropagation()
           onSelect(node.id)
         }}
+        onPointerDown={startDrag}
         style={{
           ...absoluteStyle,
           background: node.style.background,
@@ -99,6 +144,7 @@ export function CanvasNode({ document, node, selected, onSelect }: CanvasNodePro
           event.stopPropagation()
           onSelect(node.id)
         }}
+        onPointerDown={startDrag}
         style={{
           ...absoluteStyle,
           borderRadius: node.style.radius,
@@ -126,6 +172,7 @@ export function CanvasNode({ document, node, selected, onSelect }: CanvasNodePro
           event.stopPropagation()
           onSelect(node.id)
         }}
+        onPointerDown={startDrag}
         role="group"
         style={{
           ...absoluteStyle,
@@ -147,6 +194,7 @@ export function CanvasNode({ document, node, selected, onSelect }: CanvasNodePro
                 key={childNode.id}
                 document={document}
                 node={childNode}
+                onDragNode={onDragNode}
                 onSelect={onSelect}
                 selected={document.selectedNodeIds.includes(childNode.id)}
               />
