@@ -6,8 +6,14 @@ export function InspectorPanel() {
   const updateSelectedNodeContent = useEditorStore(
     (state) => state.updateSelectedNodeContent,
   )
+  const updateSelectedNodeLayout = useEditorStore(
+    (state) => state.updateSelectedNodeLayout,
+  )
   const updateSelectedNodeStyle = useEditorStore(
     (state) => state.updateSelectedNodeStyle,
+  )
+  const moveSelectedNodeToFirstContainer = useEditorStore(
+    (state) => state.moveSelectedNodeToFirstContainer,
   )
   const selectedNodeId = document.selectedNodeIds[0]
   const selectedNode = selectedNodeId ? document.nodes[selectedNodeId] : null
@@ -19,6 +25,79 @@ export function InspectorPanel() {
       {selectedCount > 0 ? (
         <div className="space-y-4">
           <p className="text-sm text-stone-500">已选中 {selectedCount} 个节点</p>
+          {selectedNode ? (
+            <div className="grid grid-cols-2 gap-3">
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>X</span>
+                <input
+                  className="rounded-md border border-stone-300 px-3 py-2"
+                  inputMode="numeric"
+                  onChange={(event) =>
+                    updateSelectedNodeLayout({
+                      x: Number(event.target.value) || 0,
+                    })
+                  }
+                  value={selectedNode.layout.x ?? 0}
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>Y</span>
+                <input
+                  className="rounded-md border border-stone-300 px-3 py-2"
+                  inputMode="numeric"
+                  onChange={(event) =>
+                    updateSelectedNodeLayout({
+                      y: Number(event.target.value) || 0,
+                    })
+                  }
+                  value={selectedNode.layout.y ?? 0}
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>宽度</span>
+                <input
+                  className="rounded-md border border-stone-300 px-3 py-2"
+                  inputMode="numeric"
+                  onChange={(event) =>
+                    updateSelectedNodeLayout({
+                      width: Number(event.target.value) || 'hug',
+                    })
+                  }
+                  value={
+                    typeof selectedNode.layout.width === 'number'
+                      ? selectedNode.layout.width
+                      : 0
+                  }
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>高度</span>
+                <input
+                  className="rounded-md border border-stone-300 px-3 py-2"
+                  inputMode="numeric"
+                  onChange={(event) =>
+                    updateSelectedNodeLayout({
+                      height: Number(event.target.value) || 'hug',
+                    })
+                  }
+                  value={
+                    typeof selectedNode.layout.height === 'number'
+                      ? selectedNode.layout.height
+                      : 0
+                  }
+                />
+              </label>
+              {selectedNode.type !== 'container' ? (
+                <button
+                  className="col-span-2 rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700"
+                  onClick={moveSelectedNodeToFirstContainer}
+                  type="button"
+                >
+                  移入容器
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           {selectedNode?.type === 'text' ? (
             <label className="flex flex-col gap-2 text-sm text-stone-600">
               <span>文本内容</span>

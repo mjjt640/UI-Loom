@@ -6,7 +6,9 @@ import {
   createImageNode,
   createTextNode,
   insertChildNode,
+  moveNode,
   removeNode,
+  updateNodeLayout,
 } from '../../../src/domain/commands/editorCommands'
 
 describe('editor commands', () => {
@@ -36,5 +38,38 @@ describe('editor commands', () => {
 
     expect(next.nodes[textNode.id]).toBeUndefined()
     expect(next.nodes[document.rootNodeId].children).not.toContain(textNode.id)
+  })
+
+  it('updates node layout without mutating the original document', () => {
+    const document = createEmptyDocument('Demo')
+    const textNode = createTextNode('标题')
+    const withText = insertChildNode(document, document.rootNodeId, textNode)
+    const next = updateNodeLayout(withText, textNode.id, {
+      x: 64,
+      y: 96,
+      width: 240,
+    })
+
+    expect(next.nodes[textNode.id].layout.x).toBe(64)
+    expect(next.nodes[textNode.id].layout.y).toBe(96)
+    expect(next.nodes[textNode.id].layout.width).toBe(240)
+    expect(withText.nodes[textNode.id].layout.x).toBe(0)
+  })
+
+  it('moves a node into a container', () => {
+    const document = createEmptyDocument('Demo')
+    const buttonNode = createButtonNode('提交')
+    const containerNode = createContainerNode()
+    const withButton = insertChildNode(document, document.rootNodeId, buttonNode)
+    const withContainer = insertChildNode(
+      withButton,
+      withButton.rootNodeId,
+      containerNode,
+    )
+    const next = moveNode(withContainer, buttonNode.id, containerNode.id)
+
+    expect(next.nodes[buttonNode.id].parentId).toBe(containerNode.id)
+    expect(next.nodes[containerNode.id].children).toContain(buttonNode.id)
+    expect(next.nodes[document.rootNodeId].children).not.toContain(buttonNode.id)
   })
 })

@@ -5,6 +5,7 @@ import {
   createImageNode,
   createTextNode,
   insertChildNode,
+  moveNode,
 } from '../../../src/domain/commands/editorCommands'
 import { exportToReactTailwind } from '../../../src/domain/exporter/reactTailwindExporter'
 import { createEmptyDocument } from '../../../src/domain/model/factories'
@@ -48,5 +49,29 @@ describe('exportToReactTailwind', () => {
     expect(code).toContain('https://example.com/hero.png')
     expect(code).toContain('<div')
     expect(code).toContain('rounded-2xl')
+  })
+
+  it('exports container children inside the container markup', () => {
+    const document = createEmptyDocument('导出测试')
+    const buttonNode = createButtonNode('立即开始')
+    const containerNode = createContainerNode()
+    const withContainer = insertChildNode(
+      document,
+      document.rootNodeId,
+      containerNode,
+    )
+    const withButton = insertChildNode(
+      withContainer,
+      withContainer.rootNodeId,
+      buttonNode,
+    )
+    const next = moveNode(withButton, buttonNode.id, containerNode.id)
+    const code = exportToReactTailwind(next)
+
+    expect(code).toContain('<div className="rounded-2xl bg-slate-50 border border-slate-200 flex flex-col gap-3 p-4">')
+    expect(code).toContain('立即开始')
+    expect(code.indexOf('<div className="rounded-2xl')).toBeLessThan(
+      code.indexOf('立即开始'),
+    )
   })
 })

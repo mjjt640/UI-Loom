@@ -8,13 +8,15 @@ export function CanvasViewport() {
   return (
     <div className="relative h-full overflow-auto rounded-xl border border-stone-200 bg-white shadow-sm">
       <div className="relative mx-auto mt-8 h-[900px] w-[1440px] bg-white">
-        {Object.values(document.nodes)
-          .filter((node) => node.type !== 'page')
+        {document.nodes[document.rootNodeId].children
+          .map((nodeId) => document.nodes[nodeId])
+          .filter(Boolean)
           .map((node) => (
             <CanvasNode
               key={node.id}
+              document={document}
               node={node}
-              onSelect={() => selectNode(node.id)}
+              onSelect={selectNode}
               selected={document.selectedNodeIds.includes(node.id)}
             />
           ))}

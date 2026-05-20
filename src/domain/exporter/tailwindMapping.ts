@@ -25,3 +25,14 @@ export function boxStyleToClassName(style: StyleProps) {
 
   return classes.join(' ')
 }
+
+export function layoutToClassName(layout: { mode?: string; gap?: number }) {
+  const classes: string[] = []
+
+  if (layout.mode === 'flex-column') classes.push('flex', 'flex-col')
+  if (layout.mode === 'flex-row') classes.push('flex', 'flex-row')
+  if (layout.gap === 12) classes.push('gap-3')
+  if (layout.gap === 16) classes.push('gap-4')
+
+  return classes.join(' ')
+}

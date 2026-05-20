@@ -1,25 +1,59 @@
-import type { UINode } from '../../../domain/model/types'
+import type { PageDocument, UINode } from '../../../domain/model/types'
 
 interface CanvasNodeProps {
+  document: PageDocument
   node: UINode
   selected: boolean
-  onSelect: () => void
+  onSelect: (nodeId: string) => void
 }
 
-export function CanvasNode({ node, selected, onSelect }: CanvasNodeProps) {
+function flexStyle(node: UINode) {
+  if (node.layout.mode === 'absolute') {
+    return {}
+  }
+
+  return {
+    alignItems:
+      node.layout.align === 'center'
+        ? 'center'
+        : node.layout.align === 'end'
+          ? 'flex-end'
+          : node.layout.align === 'stretch'
+            ? 'stretch'
+            : 'flex-start',
+    display: 'flex',
+    flexDirection: node.layout.mode === 'flex-row' ? 'row' : 'column',
+    gap: node.layout.gap,
+    justifyContent:
+      node.layout.justify === 'center'
+        ? 'center'
+        : node.layout.justify === 'end'
+          ? 'flex-end'
+          : node.layout.justify === 'between'
+            ? 'space-between'
+            : 'flex-start',
+    padding: node.layout.padding?.top,
+  } as const
+}
+
+export function CanvasNode({ document, node, selected, onSelect }: CanvasNodeProps) {
   const selectionClass = selected ? 'outline outline-2 outline-sky-500' : ''
   const absoluteStyle = {
     height: node.layout.height === 'hug' ? undefined : node.layout.height,
     left: node.layout.x,
+    position: node.parentId === document.rootNodeId ? 'absolute' : undefined,
     top: node.layout.y,
     width: node.layout.width === 'hug' ? undefined : node.layout.width,
-  }
+  } as const
 
   if (node.type === 'text') {
     return (
       <button
-        className={`absolute text-left ${selectionClass}`}
-        onClick={onSelect}
+        className={`text-left ${selectionClass}`}
+        onClick={(event) => {
+          event.stopPropagation()
+          onSelect(node.id)
+        }}
         style={{
           ...absoluteStyle,
           color: node.style.color,
@@ -36,8 +70,11 @@ export function CanvasNode({ node, selected, onSelect }: CanvasNodeProps) {
   if (node.type === 'button') {
     return (
       <button
-        className={`absolute ${selectionClass}`}
-        onClick={onSelect}
+        className={selectionClass}
+        onClick={(event) => {
+          event.stopPropagation()
+          onSelect(node.id)
+        }}
         style={{
           ...absoluteStyle,
           background: node.style.background,
@@ -58,7 +95,10 @@ export function CanvasNode({ node, selected, onSelect }: CanvasNodeProps) {
       <button
         aria-label={node.content.alt ?? '图片描述'}
         className={`absolute block overflow-hidden bg-stone-100 ${selectionClass}`}
-        onClick={onSelect}
+        onClick={(event) => {
+          event.stopPropagation()
+          onSelect(node.id)
+        }}
         style={{
           ...absoluteStyle,
           borderRadius: node.style.radius,
@@ -79,21 +119,40 @@ export function CanvasNode({ node, selected, onSelect }: CanvasNodeProps) {
 
   if (node.type === 'container') {
     return (
-      <button
+      <div
         aria-label="容器节点"
-        className={`absolute flex items-center justify-center border text-sm text-stone-500 ${selectionClass}`}
-        onClick={onSelect}
+        className={`border text-sm text-stone-500 ${selectionClass}`}
+        onClick={(event) => {
+          event.stopPropagation()
+          onSelect(node.id)
+        }}
+        role="group"
         style={{
           ...absoluteStyle,
           background: node.style.background,
           borderColor: node.style.borderColor,
           borderRadius: node.style.radius,
           borderWidth: node.style.borderWidth,
+          ...flexStyle(node),
         }}
-        type="button"
       >
-        容器
-      </button>
+        {node.children.length === 0 ? (
+          <span className="self-center">容器</span>
+        ) : (
+          node.children
+            .map((childId) => document.nodes[childId])
+            .filter(Boolean)
+            .map((childNode) => (
+              <CanvasNode
+                key={childNode.id}
+                document={document}
+                node={childNode}
+                onSelect={onSelect}
+                selected={document.selectedNodeIds.includes(childNode.id)}
+              />
+            ))
+        )}
+      </div>
     )
   }
 

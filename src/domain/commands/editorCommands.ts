@@ -1,5 +1,5 @@
 import { createId } from '../../utils/id'
-import type { PageDocument, UINode } from '../model/types'
+import type { LayoutProps, PageDocument, UINode } from '../model/types'
 
 export function createTextNode(text: string): UINode {
   return {
@@ -104,6 +104,105 @@ export function insertChildNode(
         parentId,
       },
     },
+  }
+}
+
+export function updateNodeLayout(
+  document: PageDocument,
+  nodeId: string,
+  layout: Partial<LayoutProps>,
+): PageDocument {
+  const node = document.nodes[nodeId]
+
+  if (!node) {
+    throw new Error(`Node not found: ${nodeId}`)
+  }
+
+  return {
+    ...document,
+    nodes: {
+      ...document.nodes,
+      [nodeId]: {
+        ...node,
+        layout: {
+          ...node.layout,
+          ...layout,
+        },
+      },
+    },
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+function isDescendant(
+  document: PageDocument,
+  nodeId: string,
+  candidateParentId: string,
+): boolean {
+  const candidateParent = document.nodes[candidateParentId]
+
+  if (!candidateParent) {
+    return false
+  }
+
+  if (candidateParent.parentId === nodeId) {
+    return true
+  }
+
+  return candidateParent.parentId
+    ? isDescendant(document, nodeId, candidateParent.parentId)
+    : false
+}
+
+export function moveNode(
+  document: PageDocument,
+  nodeId: string,
+  nextParentId: string,
+): PageDocument {
+  const node = document.nodes[nodeId]
+  const nextParent = document.nodes[nextParentId]
+
+  if (
+    !node ||
+    !nextParent ||
+    nodeId === document.rootNodeId ||
+    nodeId === nextParentId ||
+    isDescendant(document, nodeId, nextParentId)
+  ) {
+    return document
+  }
+
+  const previousParentId = node.parentId
+  const previousParent = previousParentId ? document.nodes[previousParentId] : null
+
+  return {
+    ...document,
+    nodes: {
+      ...document.nodes,
+      ...(previousParent
+        ? {
+            [previousParent.id]: {
+              ...previousParent,
+              children: previousParent.children.filter((childId) => childId !== nodeId),
+            },
+          }
+        : {}),
+      [nextParentId]: {
+        ...nextParent,
+        children: nextParent.children.includes(nodeId)
+          ? nextParent.children
+          : [...nextParent.children, nodeId],
+      },
+      [nodeId]: {
+        ...node,
+        parentId: nextParentId,
+        layout:
+          nextParent.layout.mode === 'absolute'
+            ? node.layout
+            : { ...node.layout, mode: 'absolute', x: undefined, y: undefined },
+      },
+    },
+    updatedAt: new Date().toISOString(),
   }
 }
 

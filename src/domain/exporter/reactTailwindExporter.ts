@@ -1,11 +1,26 @@
 import type { PageDocument, UINode } from '../model/types'
-import { boxStyleToClassName, textStyleToClassName } from './tailwindMapping'
+import {
+  boxStyleToClassName,
+  layoutToClassName,
+  textStyleToClassName,
+} from './tailwindMapping'
 
 function escapeText(value = '') {
   return value.replaceAll('{', '&#123;').replaceAll('}', '&#125;')
 }
 
-function renderNode(node: UINode) {
+function indent(value: string) {
+  return value
+    .split('\n')
+    .map((line) => `  ${line}`)
+    .join('\n')
+}
+
+function className(...values: string[]) {
+  return values.filter(Boolean).join(' ')
+}
+
+function renderNode(document: PageDocument, node: UINode): string {
   if (node.type === 'text') {
     return `      <div className="${textStyleToClassName(node.style)}">${escapeText(
       node.content.text,
@@ -25,16 +40,34 @@ function renderNode(node: UINode) {
   }
 
   if (node.type === 'container') {
-    return `      <div className="${boxStyleToClassName(node.style)} p-4"></div>`
+    const children = node.children
+      .map((childId) => document.nodes[childId])
+      .filter(Boolean)
+      .map((childNode) => renderNode(document, childNode))
+      .join('\n')
+    const classes = className(
+      boxStyleToClassName(node.style),
+      layoutToClassName(node.layout),
+      'p-4',
+    )
+
+    if (!children) {
+      return `      <div className="${classes}"></div>`
+    }
+
+    return [`      <div className="${classes}">`, indent(children), '      </div>'].join(
+      '\n',
+    )
   }
 
   return ''
 }
 
 export function exportToReactTailwind(document: PageDocument) {
-  const body = Object.values(document.nodes)
-    .filter((node) => node.type !== 'page')
-    .map(renderNode)
+  const body = document.nodes[document.rootNodeId].children
+    .map((nodeId) => document.nodes[nodeId])
+    .filter(Boolean)
+    .map((node) => renderNode(document, node))
     .filter(Boolean)
     .join('\n')
 
