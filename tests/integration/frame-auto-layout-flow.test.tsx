@@ -69,6 +69,7 @@ describe('frame auto layout flow', () => {
       justifyContent: 'space-between',
       padding: '32px',
     })
+    await user.click(screen.getByRole('button', { name: 'src/components/Frame.tsx' }))
     expect(
       screen.getByText(/flex flex-row gap-8 p-8 items-center justify-between/),
     ).toBeInTheDocument()

@@ -8,10 +8,10 @@ import {
   insertChildNode,
   moveNode,
 } from '../../../src/domain/commands/editorCommands'
-import { exportToReactTailwind } from '../../../src/domain/exporter/reactTailwindExporter'
+import { renderReactNode } from '../../../src/domain/exporter/reactTailwindExporter'
 import { createEmptyDocument } from '../../../src/domain/model/factories'
 
-describe('exportToReactTailwind', () => {
+describe('renderReactNode', () => {
   it('exports a text node into jsx', () => {
     const document = createEmptyDocument('导出测试')
     const next = insertChildNode(
@@ -19,9 +19,9 @@ describe('exportToReactTailwind', () => {
       document.rootNodeId,
       createTextNode('欢迎回来'),
     )
-    const code = exportToReactTailwind(next)
+    const [textId] = next.nodes[next.rootNodeId].children
+    const code = renderReactNode(next, next.nodes[textId])
 
-    expect(code).toContain('export function GeneratedPage()')
     expect(code).toContain('欢迎回来')
   })
 
@@ -42,7 +42,9 @@ describe('exportToReactTailwind', () => {
       withImage.rootNodeId,
       createContainerNode(),
     )
-    const code = exportToReactTailwind(next)
+    const code = next.nodes[next.rootNodeId].children
+      .map((nodeId) => renderReactNode(next, next.nodes[nodeId]))
+      .join('\n')
 
     expect(code).toContain('<button')
     expect(code).toContain('开始使用')
@@ -67,7 +69,7 @@ describe('exportToReactTailwind', () => {
       buttonNode,
     )
     const next = moveNode(withButton, buttonNode.id, containerNode.id)
-    const code = exportToReactTailwind(next)
+    const code = renderReactNode(next, next.nodes[containerNode.id])
 
     expect(code).toContain('<div className="rounded-2xl bg-slate-50 border border-slate-200 flex flex-col gap-3 p-4">')
     expect(code).toContain('立即开始')
@@ -82,7 +84,7 @@ describe('exportToReactTailwind', () => {
     const buttonNode = createButtonNode('确认')
     const withFrame = insertChildNode(document, document.rootNodeId, frameNode)
     const next = insertChildNode(withFrame, frameNode.id, buttonNode)
-    const code = exportToReactTailwind(next)
+    const code = renderReactNode(next, next.nodes[frameNode.id])
 
     expect(code).toContain(
       '<div aria-label="Frame 节点" className="rounded-3xl bg-white border border-stone-300 flex flex-col gap-4 p-6 items-stretch">',
@@ -98,7 +100,7 @@ describe('exportToReactTailwind', () => {
       padding: { top: 20, right: 28, bottom: 36, left: 44 },
     })
     const next = insertChildNode(document, document.rootNodeId, frameNode)
-    const code = exportToReactTailwind(next)
+    const code = renderReactNode(next, next.nodes[frameNode.id])
 
     expect(code).toContain(
       'flex flex-col gap-[20px] pt-[20px] pr-[28px] pb-[36px] pl-[44px]',

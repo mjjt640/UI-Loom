@@ -1,13 +1,18 @@
-import { useState } from 'react'
 import { createExportBundle } from '../../../domain/exporter/exportBundleFactory'
 import { exportTargets } from '../../../domain/exporter/exportRegistry'
 import type { ExportTargetId } from '../../../domain/exporter/exportTypes'
 import { downloadExportBundle } from '../../../platform/file-system/browserDownloadAdapter'
 import { useEditorStore } from '../../../store/editorStore'
 
-export function Toolbar() {
-  const [exportTargetId, setExportTargetId] =
-    useState<ExportTargetId>('react-tailwind')
+interface ToolbarProps {
+  exportTargetId: ExportTargetId
+  onExportTargetChange: (targetId: ExportTargetId) => void
+}
+
+export function Toolbar({
+  exportTargetId,
+  onExportTargetChange,
+}: ToolbarProps) {
   const document = useEditorStore((state) => state.document)
   const alignSelectedNodesLeft = useEditorStore(
     (state) => state.alignSelectedNodesLeft,
@@ -131,7 +136,7 @@ export function Toolbar() {
         <select
           className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-700"
           onChange={(event) =>
-            setExportTargetId(event.target.value as ExportTargetId)
+            onExportTargetChange(event.target.value as ExportTargetId)
           }
           value={exportTargetId}
         >

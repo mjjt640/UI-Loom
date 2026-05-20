@@ -11,7 +11,7 @@ function escapeText(value = '') {
   return value.replaceAll('{', '&#123;').replaceAll('}', '&#125;')
 }
 
-function indent(value: string) {
+export function indentReact(value: string) {
   return value
     .split('\n')
     .map((line) => `  ${line}`)
@@ -22,7 +22,7 @@ function className(...values: string[]) {
   return values.filter(Boolean).join(' ')
 }
 
-function resolveRenderableNode(document: PageDocument, nodeId: string) {
+export function resolveReactRenderableNode(document: PageDocument, nodeId: string) {
   const node = document.nodes[nodeId]
 
   if (!node) {
@@ -44,13 +44,13 @@ function resolveRenderableNode(document: PageDocument, nodeId: string) {
   return node
 }
 
-function visibleChildNodes(document: PageDocument, node: UINode) {
+export function visibleReactChildNodes(document: PageDocument, node: UINode) {
   return node.children
-    .map((childId) => resolveRenderableNode(document, childId))
+    .map((childId) => resolveReactRenderableNode(document, childId))
     .filter((childNode) => childNode.meta.visible !== false)
 }
 
-function renderNode(document: PageDocument, node: UINode): string {
+export function renderReactNode(document: PageDocument, node: UINode): string {
   if (node.type === 'text') {
     return `      <div className="${textStyleToClassName(node.style)}">${escapeText(
       node.content.text,
@@ -76,8 +76,8 @@ function renderNode(document: PageDocument, node: UINode): string {
   }
 
   if (node.type === 'container') {
-    const children = visibleChildNodes(document, node)
-      .map((childNode) => renderNode(document, childNode))
+    const children = visibleReactChildNodes(document, node)
+      .map((childNode) => renderReactNode(document, childNode))
       .join('\n')
     const classes = className(
       boxStyleToClassName(node.style),
@@ -90,14 +90,14 @@ function renderNode(document: PageDocument, node: UINode): string {
       return `      <div className="${classes}"></div>`
     }
 
-    return [`      <div className="${classes}">`, indent(children), '      </div>'].join(
+    return [`      <div className="${classes}">`, indentReact(children), '      </div>'].join(
       '\n',
     )
   }
 
   if (node.type === 'frame') {
-    const children = visibleChildNodes(document, node)
-      .map((childNode) => renderNode(document, childNode))
+    const children = visibleReactChildNodes(document, node)
+      .map((childNode) => renderReactNode(document, childNode))
       .join('\n')
     const classes = className(
       boxStyleToClassName(node.style),
@@ -112,40 +112,24 @@ function renderNode(document: PageDocument, node: UINode): string {
 
     return [
       `      <div aria-label="Frame 节点" className="${classes}">`,
-      indent(children),
+      indentReact(children),
       '      </div>',
     ].join('\n')
   }
 
   if (node.type === 'group') {
-    const children = visibleChildNodes(document, node)
-      .map((childNode) => renderNode(document, childNode))
+    const children = visibleReactChildNodes(document, node)
+      .map((childNode) => renderReactNode(document, childNode))
       .join('\n')
 
     if (!children) {
       return '      <div aria-label="图层组"></div>'
     }
 
-    return ['      <div aria-label="图层组">', indent(children), '      </div>'].join(
+    return ['      <div aria-label="图层组">', indentReact(children), '      </div>'].join(
       '\n',
     )
   }
 
   throw new Error(`React Tailwind export does not support node type: ${node.type}`)
-}
-
-export function exportToReactTailwind(document: PageDocument) {
-  const body = visibleChildNodes(document, document.nodes[document.rootNodeId])
-    .map((node) => renderNode(document, node))
-    .join('\n')
-
-  return [
-    'export function GeneratedPage() {',
-    '  return (',
-    '    <main className="min-h-screen bg-white">',
-    body,
-    '    </main>',
-    '  );',
-    '}',
-  ].join('\n')
 }
