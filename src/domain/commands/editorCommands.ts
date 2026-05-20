@@ -95,6 +95,36 @@ export function createContainerNode(): UINode {
   }
 }
 
+export function createFrameNode(layout: Partial<LayoutProps> = {}): UINode {
+  return {
+    id: createId(),
+    type: 'frame',
+    name: 'Frame',
+    parentId: null,
+    children: [],
+    layout: {
+      mode: 'flex-column',
+      x: 120,
+      y: 120,
+      width: 320,
+      height: 240,
+      gap: 16,
+      padding: { top: 24, right: 24, bottom: 24, left: 24 },
+      align: 'stretch',
+      justify: 'start',
+      ...layout,
+    },
+    style: {
+      background: '#ffffff',
+      radius: 24,
+      borderWidth: 1,
+      borderColor: '#d6d3d1',
+    },
+    content: {},
+    meta: {},
+  }
+}
+
 export function createRectNode(): UINode {
   return {
     id: createId(),
@@ -510,6 +540,111 @@ export function groupSelectedNodes(document: PageDocument): PageDocument {
       ...groupedChildren,
     },
     selectedNodeIds: [groupNode.id],
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+export function frameSelectedNodes(document: PageDocument): PageDocument {
+  if (document.selectedNodeIds.length < 2) {
+    return document
+  }
+
+  const selectedIds = new Set(document.selectedNodeIds)
+  const selectedNodes = document.selectedNodeIds.map((nodeId) => {
+    const node = document.nodes[nodeId]
+
+    if (!node || node.id === document.rootNodeId || !node.parentId) {
+      throw new Error(`Node cannot be framed: ${nodeId}`)
+    }
+
+    assertAbsoluteLayer(node)
+
+    return node
+  })
+  const parentId = selectedNodes[0].parentId
+
+  if (!parentId || selectedNodes.some((node) => node.parentId !== parentId)) {
+    throw new Error('Cannot frame nodes from different parents')
+  }
+
+  const parent = document.nodes[parentId]
+
+  if (!parent) {
+    throw new Error(`Parent node not found: ${parentId}`)
+  }
+
+  const orderedSelectedNodes: AbsoluteLayerNode[] = parent.children
+    .filter((childId) => selectedIds.has(childId))
+    .map((childId) =>
+      resolveAbsoluteLayer(
+        document,
+        childId,
+        `Selected child node not found: ${childId}`,
+      ),
+    )
+
+  if (orderedSelectedNodes.length !== selectedNodes.length) {
+    throw new Error('Selected nodes are not direct siblings')
+  }
+
+  const left = Math.min(...orderedSelectedNodes.map((node) => node.layout.x))
+  const top = Math.min(...orderedSelectedNodes.map((node) => node.layout.y))
+  const right = Math.max(
+    ...orderedSelectedNodes.map(
+      (node) => node.layout.x + node.layout.width,
+    ),
+  )
+  const bottom = Math.max(
+    ...orderedSelectedNodes.map(
+      (node) => node.layout.y + node.layout.height,
+    ),
+  )
+  const frameNode = createFrameNode({
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  })
+  const firstSelectedIndex = parent.children.findIndex((childId) =>
+    selectedIds.has(childId),
+  )
+  const nextParentChildren = parent.children.filter(
+    (childId) => !selectedIds.has(childId),
+  )
+
+  nextParentChildren.splice(firstSelectedIndex, 0, frameNode.id)
+
+  const framedChildren = Object.fromEntries(
+    orderedSelectedNodes.map((node) => [
+      node.id,
+      {
+        ...node,
+        parentId: frameNode.id,
+        layout: {
+          ...node.layout,
+          x: node.layout.x - left,
+          y: node.layout.y - top,
+        },
+      },
+    ]),
+  )
+
+  return {
+    ...document,
+    nodes: {
+      ...document.nodes,
+      [parent.id]: {
+        ...parent,
+        children: nextParentChildren,
+      },
+      [frameNode.id]: {
+        ...frameNode,
+        parentId,
+        children: orderedSelectedNodes.map((node) => node.id),
+      },
+      ...framedChildren,
+    },
+    selectedNodeIds: [frameNode.id],
     updatedAt: new Date().toISOString(),
   }
 }

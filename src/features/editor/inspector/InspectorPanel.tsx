@@ -1,6 +1,10 @@
 import { useEditorStore } from '../../../store/editorStore'
 import { CodePreviewPanel } from '../../preview/CodePreviewPanel'
 
+function numericInputValue(value: number | 'hug' | 'fill' | undefined) {
+  return typeof value === 'number' ? value : 0
+}
+
 export function InspectorPanel() {
   const document = useEditorStore((state) => state.document)
   const updateSelectedNodeContent = useEditorStore(
@@ -18,6 +22,9 @@ export function InspectorPanel() {
   const selectedNodeId = document.selectedNodeIds[0]
   const selectedNode = selectedNodeId ? document.nodes[selectedNodeId] : null
   const selectedCount = document.selectedNodeIds.length
+  const showLayoutControls =
+    selectedNode?.type === 'frame' || selectedNode?.type === 'container'
+  const selectedPadding = selectedNode?.layout.padding?.top ?? 0
 
   return (
     <aside className="border-l border-stone-200 bg-white p-4">
@@ -64,9 +71,7 @@ export function InspectorPanel() {
                     })
                   }
                   value={
-                    typeof selectedNode.layout.width === 'number'
-                      ? selectedNode.layout.width
-                      : 0
+                    numericInputValue(selectedNode.layout.width)
                   }
                 />
               </label>
@@ -81,13 +86,13 @@ export function InspectorPanel() {
                     })
                   }
                   value={
-                    typeof selectedNode.layout.height === 'number'
-                      ? selectedNode.layout.height
-                      : 0
+                    numericInputValue(selectedNode.layout.height)
                   }
                 />
               </label>
-              {selectedNode.type !== 'container' && selectedNode.type !== 'rect' ? (
+              {selectedNode.type !== 'container' &&
+              selectedNode.type !== 'frame' &&
+              selectedNode.type !== 'rect' ? (
                 <button
                   className="col-span-2 rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700"
                   onClick={moveSelectedNodeToFirstContainer}
@@ -96,6 +101,107 @@ export function InspectorPanel() {
                   移入容器
                 </button>
               ) : null}
+            </div>
+          ) : null}
+          {selectedNode && showLayoutControls ? (
+            <div className="space-y-3 rounded-xl border border-stone-200 p-3">
+              <p className="text-sm font-medium text-stone-700">Auto Layout</p>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>布局方向</span>
+                <select
+                  className="rounded-md border border-stone-300 bg-white px-3 py-2"
+                  onChange={(event) =>
+                    updateSelectedNodeLayout({
+                      mode: event.target.value === 'flex-row'
+                        ? 'flex-row'
+                        : 'flex-column',
+                    })
+                  }
+                  value={selectedNode.layout.mode}
+                >
+                  <option value="flex-column">纵向</option>
+                  <option value="flex-row">横向</option>
+                </select>
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex flex-col gap-2 text-sm text-stone-600">
+                  <span>间距</span>
+                  <input
+                    className="rounded-md border border-stone-300 px-3 py-2"
+                    inputMode="numeric"
+                    onChange={(event) =>
+                      updateSelectedNodeLayout({
+                        gap: Number(event.target.value) || 0,
+                      })
+                    }
+                    value={selectedNode.layout.gap ?? 0}
+                  />
+                </label>
+                <label className="flex flex-col gap-2 text-sm text-stone-600">
+                  <span>内边距</span>
+                  <input
+                    className="rounded-md border border-stone-300 px-3 py-2"
+                    inputMode="numeric"
+                    onChange={(event) => {
+                      const padding = Number(event.target.value) || 0
+
+                      updateSelectedNodeLayout({
+                        padding: {
+                          top: padding,
+                          right: padding,
+                          bottom: padding,
+                          left: padding,
+                        },
+                      })
+                    }}
+                    value={selectedPadding}
+                  />
+                </label>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex flex-col gap-2 text-sm text-stone-600">
+                  <span>对齐方式</span>
+                  <select
+                    className="rounded-md border border-stone-300 bg-white px-3 py-2"
+                    onChange={(event) =>
+                      updateSelectedNodeLayout({
+                        align: event.target.value as
+                          | 'start'
+                          | 'center'
+                          | 'end'
+                          | 'stretch',
+                      })
+                    }
+                    value={selectedNode.layout.align ?? 'start'}
+                  >
+                    <option value="start">起点</option>
+                    <option value="center">居中</option>
+                    <option value="end">终点</option>
+                    <option value="stretch">拉伸</option>
+                  </select>
+                </label>
+                <label className="flex flex-col gap-2 text-sm text-stone-600">
+                  <span>分布方式</span>
+                  <select
+                    className="rounded-md border border-stone-300 bg-white px-3 py-2"
+                    onChange={(event) =>
+                      updateSelectedNodeLayout({
+                        justify: event.target.value as
+                          | 'start'
+                          | 'center'
+                          | 'end'
+                          | 'between',
+                      })
+                    }
+                    value={selectedNode.layout.justify ?? 'start'}
+                  >
+                    <option value="start">起点</option>
+                    <option value="center">居中</option>
+                    <option value="end">终点</option>
+                    <option value="between">两端</option>
+                  </select>
+                </label>
+              </div>
             </div>
           ) : null}
           {selectedNode?.type === 'text' ? (

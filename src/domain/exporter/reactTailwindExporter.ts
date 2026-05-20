@@ -1,7 +1,9 @@
 import type { PageDocument, UINode } from '../model/types'
 import {
   boxStyleToClassName,
+  layoutAlignmentToClassName,
   layoutToClassName,
+  paddingToClassName,
   textStyleToClassName,
 } from './tailwindMapping'
 
@@ -32,6 +34,7 @@ function resolveRenderableNode(document: PageDocument, nodeId: string) {
     node.type !== 'button' &&
     node.type !== 'image' &&
     node.type !== 'container' &&
+    node.type !== 'frame' &&
     node.type !== 'rect' &&
     node.type !== 'group'
   ) {
@@ -79,7 +82,8 @@ function renderNode(document: PageDocument, node: UINode): string {
     const classes = className(
       boxStyleToClassName(node.style),
       layoutToClassName(node.layout),
-      'p-4',
+      paddingToClassName(node.layout),
+      layoutAlignmentToClassName(node.layout),
     )
 
     if (!children) {
@@ -89,6 +93,28 @@ function renderNode(document: PageDocument, node: UINode): string {
     return [`      <div className="${classes}">`, indent(children), '      </div>'].join(
       '\n',
     )
+  }
+
+  if (node.type === 'frame') {
+    const children = visibleChildNodes(document, node)
+      .map((childNode) => renderNode(document, childNode))
+      .join('\n')
+    const classes = className(
+      boxStyleToClassName(node.style),
+      layoutToClassName(node.layout),
+      paddingToClassName(node.layout),
+      layoutAlignmentToClassName(node.layout),
+    )
+
+    if (!children) {
+      return `      <div aria-label="Frame 节点" className="${classes}"></div>`
+    }
+
+    return [
+      `      <div aria-label="Frame 节点" className="${classes}">`,
+      indent(children),
+      '      </div>',
+    ].join('\n')
   }
 
   if (node.type === 'group') {
