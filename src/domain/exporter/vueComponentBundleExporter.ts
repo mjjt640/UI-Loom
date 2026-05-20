@@ -153,6 +153,8 @@ function vueReadme(boundaries: VueComponentBoundary[]) {
     '',
     '把 `GeneratedPage.vue` 和 `components/` 放入 Vue 3 项目中使用。',
     '',
+    '导出的 `width: 100%`、`height: auto`、`min-width`、`max-width` 和约束定位来自设计节点的响应式布局语义。',
+    '',
     '组件文件:',
     ...componentPaths,
     '',

@@ -71,8 +71,9 @@ describe('renderReactNode', () => {
     const next = moveNode(withButton, buttonNode.id, containerNode.id)
     const code = renderReactNode(next, next.nodes[containerNode.id])
 
+    expect(code).toContain('absolute left-[320px] top-[72px] w-[280px] h-[180px]')
     expect(code).toContain(
-      'className="rounded-2xl bg-slate-50 border border-slate-200 flex flex-col gap-3 p-4"',
+      'rounded-2xl bg-slate-50 border border-slate-200 flex flex-col gap-3 p-4',
     )
     expect(code).toContain('立即开始')
     expect(code.indexOf('className="rounded-2xl')).toBeLessThan(
@@ -89,7 +90,10 @@ describe('renderReactNode', () => {
     const code = renderReactNode(next, next.nodes[frameNode.id])
 
     expect(code).toContain(
-      'aria-label="Frame 节点" className="rounded-3xl bg-white border border-stone-300 flex flex-col gap-4 p-6 items-stretch"',
+      'aria-label="Frame 节点" className="absolute left-[120px] top-[120px] w-[320px] h-[240px]',
+    )
+    expect(code).toContain(
+      'rounded-3xl bg-white border border-stone-300 flex flex-col gap-4 p-6 items-stretch',
     )
     expect(code).toContain('确认')
     expect(code.indexOf('Frame 节点')).toBeLessThan(code.indexOf('确认'))

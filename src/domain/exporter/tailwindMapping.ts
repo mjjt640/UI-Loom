@@ -1,4 +1,4 @@
-import type { LayoutProps, StyleProps } from '../model/types'
+import type { LayoutProps, LayoutSize, StyleProps } from '../model/types'
 
 export function textStyleToClassName(style: StyleProps) {
   const classes: string[] = []
@@ -94,6 +94,98 @@ function spacingClass(prefix: string, value: number | undefined) {
   if (value === 32) return `${prefix}-8`
 
   return `${prefix}-[${value}px]`
+}
+
+function numericPositionClass(prefix: string, value: number | undefined) {
+  return value === undefined ? '' : `${prefix}-[${value}px]`
+}
+
+function sizeClass(axis: 'height' | 'width', size: LayoutSize) {
+  if (axis === 'width') {
+    if (size === 'fill') return 'w-full'
+    if (size === 'hug') return 'w-auto'
+    return `w-[${size}px]`
+  }
+
+  if (size === 'fill') return 'h-full'
+  if (size === 'hug') return 'h-auto'
+  return `h-[${size}px]`
+}
+
+function boundsClass(prefix: string, value: number | undefined) {
+  return value === undefined ? '' : `${prefix}-[${value}px]`
+}
+
+function horizontalConstraintClass(layout: LayoutProps) {
+  const horizontal = layout.constraints?.horizontal ?? 'left'
+
+  if (horizontal === 'center') {
+    return 'left-1/2 -translate-x-1/2'
+  }
+
+  if (horizontal === 'right') {
+    return numericPositionClass('right', layout.x)
+  }
+
+  if (horizontal === 'stretch') {
+    return [
+      numericPositionClass('left', layout.x),
+      numericPositionClass('right', layout.x),
+    ].join(' ')
+  }
+
+  return numericPositionClass('left', layout.x)
+}
+
+function verticalConstraintClass(layout: LayoutProps) {
+  const vertical = layout.constraints?.vertical ?? 'top'
+
+  if (vertical === 'center') {
+    return 'top-1/2 -translate-y-1/2'
+  }
+
+  if (vertical === 'bottom') {
+    return numericPositionClass('bottom', layout.y)
+  }
+
+  if (vertical === 'stretch') {
+    return [
+      numericPositionClass('top', layout.y),
+      numericPositionClass('bottom', layout.y),
+    ].join(' ')
+  }
+
+  return numericPositionClass('top', layout.y)
+}
+
+export function layoutSizingToClassName(layout: LayoutProps) {
+  return [
+    sizeClass('width', layout.width),
+    sizeClass('height', layout.height),
+    boundsClass('min-w', layout.minWidth),
+    boundsClass('max-w', layout.maxWidth),
+    boundsClass('min-h', layout.minHeight),
+    boundsClass('max-h', layout.maxHeight),
+  ]
+    .filter(Boolean)
+    .join(' ')
+}
+
+export function layoutPositionToClassName(
+  layout: LayoutProps,
+  isRootChild: boolean,
+) {
+  if (!isRootChild) {
+    return ''
+  }
+
+  return [
+    'absolute',
+    horizontalConstraintClass(layout),
+    verticalConstraintClass(layout),
+  ]
+    .filter(Boolean)
+    .join(' ')
 }
 
 export function layoutToClassName(layout: Pick<LayoutProps, 'gap' | 'mode'>) {

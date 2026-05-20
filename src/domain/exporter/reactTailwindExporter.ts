@@ -3,6 +3,8 @@ import { nodeMappingAttribute } from './codeMapping'
 import {
   boxStyleToClassName,
   layoutAlignmentToClassName,
+  layoutPositionToClassName,
+  layoutSizingToClassName,
   layoutToClassName,
   paddingToClassName,
   textStyleToClassName,
@@ -25,6 +27,13 @@ function className(...values: string[]) {
 
 function ariaLabelForNode(node: UINode, defaultLabel: string) {
   return node.name === defaultLabel ? defaultLabel : node.name
+}
+
+function nodeLayoutClassName(document: PageDocument, node: UINode) {
+  return className(
+    layoutPositionToClassName(node.layout, node.parentId === document.rootNodeId),
+    layoutSizingToClassName(node.layout),
+  )
 }
 
 export function resolveReactRenderableNode(document: PageDocument, nodeId: string) {
@@ -57,31 +66,50 @@ export function visibleReactChildNodes(document: PageDocument, node: UINode) {
 
 export function renderReactNode(document: PageDocument, node: UINode): string {
   if (node.type === 'text') {
-    return `      <div ${nodeMappingAttribute(node)} className="${textStyleToClassName(node.style)}">${escapeText(
+    const classes = className(
+      nodeLayoutClassName(document, node),
+      textStyleToClassName(node.style),
+    )
+
+    return `      <div ${nodeMappingAttribute(node)} className="${classes}">${escapeText(
       node.content.text,
     )}</div>`
   }
 
   if (node.type === 'button') {
-    return `      <button ${nodeMappingAttribute(node)} type="button" className="${boxStyleToClassName(node.style)} px-4 py-2">${escapeText(
+    const classes = className(
+      nodeLayoutClassName(document, node),
+      boxStyleToClassName(node.style),
+      'px-4 py-2',
+    )
+
+    return `      <button ${nodeMappingAttribute(node)} type="button" className="${classes}">${escapeText(
       node.content.text,
     )}</button>`
   }
 
   if (node.type === 'image') {
-    return `      <img ${nodeMappingAttribute(node)} className="${boxStyleToClassName(
-      node.style,
-    )}" src="${escapeText(node.content.src)}" alt="${escapeText(node.content.alt)}" />`
+    const classes = className(
+      nodeLayoutClassName(document, node),
+      boxStyleToClassName(node.style),
+    )
+
+    return `      <img ${nodeMappingAttribute(node)} className="${classes}" src="${escapeText(
+      node.content.src,
+    )}" alt="${escapeText(node.content.alt)}" />`
   }
 
   if (node.type === 'rect') {
+    const classes = className(
+      nodeLayoutClassName(document, node),
+      boxStyleToClassName(node.style),
+    )
+
     return `      <div ${nodeMappingAttribute(node)} aria-label="${escapeText(
       ariaLabelForNode(node, 'Rectangle') === 'Rectangle'
         ? '矩形图层'
         : ariaLabelForNode(node, 'Rectangle'),
-    )}" className="${boxStyleToClassName(
-      node.style,
-    )}"></div>`
+    )}" className="${classes}"></div>`
   }
 
   if (node.type === 'container') {
@@ -89,6 +117,7 @@ export function renderReactNode(document: PageDocument, node: UINode): string {
       .map((childNode) => renderReactNode(document, childNode))
       .join('\n')
     const classes = className(
+      nodeLayoutClassName(document, node),
       boxStyleToClassName(node.style),
       layoutToClassName(node.layout),
       paddingToClassName(node.layout),
@@ -109,6 +138,7 @@ export function renderReactNode(document: PageDocument, node: UINode): string {
       .map((childNode) => renderReactNode(document, childNode))
       .join('\n')
     const classes = className(
+      nodeLayoutClassName(document, node),
       boxStyleToClassName(node.style),
       layoutToClassName(node.layout),
       paddingToClassName(node.layout),
@@ -138,12 +168,13 @@ export function renderReactNode(document: PageDocument, node: UINode): string {
     const children = visibleReactChildNodes(document, node)
       .map((childNode) => renderReactNode(document, childNode))
       .join('\n')
+    const classes = nodeLayoutClassName(document, node)
 
     if (!children) {
-      return `      <div ${nodeMappingAttribute(node)} aria-label="图层组"></div>`
+      return `      <div ${nodeMappingAttribute(node)} aria-label="图层组" className="${classes}"></div>`
     }
 
-    return [`      <div ${nodeMappingAttribute(node)} aria-label="图层组">`, indentReact(children), '      </div>'].join(
+    return [`      <div ${nodeMappingAttribute(node)} aria-label="图层组" className="${classes}">`, indentReact(children), '      </div>'].join(
       '\n',
     )
   }

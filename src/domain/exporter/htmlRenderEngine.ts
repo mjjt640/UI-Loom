@@ -70,6 +70,52 @@ function optionalCssDeclaration(
   return value === undefined || value === '' ? [] : [cssDeclaration(property, value)]
 }
 
+function layoutSizeDeclaration(
+  property: 'height' | 'width',
+  value: LayoutProps['height'] | LayoutProps['width'],
+) {
+  if (typeof value === 'number') return [cssDeclaration(property, value)]
+  if (value === 'fill') return [`  ${property}: 100%;`]
+  return [`  ${property}: auto;`]
+}
+
+function constrainedPositionCss(layout: LayoutProps) {
+  const horizontal = layout.constraints?.horizontal ?? 'left'
+  const vertical = layout.constraints?.vertical ?? 'top'
+  const declarations: string[] = []
+  const transforms: string[] = []
+
+  if (horizontal === 'center') {
+    declarations.push('  left: 50%;')
+    transforms.push('translateX(-50%)')
+  } else if (horizontal === 'right') {
+    declarations.push(...optionalCssDeclaration('right', layout.x))
+  } else if (horizontal === 'stretch') {
+    declarations.push(...optionalCssDeclaration('left', layout.x))
+    declarations.push(...optionalCssDeclaration('right', layout.x))
+  } else {
+    declarations.push(...optionalCssDeclaration('left', layout.x))
+  }
+
+  if (vertical === 'center') {
+    declarations.push('  top: 50%;')
+    transforms.push('translateY(-50%)')
+  } else if (vertical === 'bottom') {
+    declarations.push(...optionalCssDeclaration('bottom', layout.y))
+  } else if (vertical === 'stretch') {
+    declarations.push(...optionalCssDeclaration('top', layout.y))
+    declarations.push(...optionalCssDeclaration('bottom', layout.y))
+  } else {
+    declarations.push(...optionalCssDeclaration('top', layout.y))
+  }
+
+  if (transforms.length > 0) {
+    declarations.push(`  transform: ${transforms.join(' ')};`)
+  }
+
+  return declarations
+}
+
 function styleToCss(style: StyleProps) {
   return [
     ...optionalCssDeclaration('background', style.background),
@@ -90,14 +136,13 @@ function styleToCss(style: StyleProps) {
 function layoutToCss(layout: LayoutProps, isRootChild: boolean) {
   const declarations = [
     ...(isRootChild ? ['  position: absolute;'] : []),
-    ...optionalCssDeclaration('left', layout.x),
-    ...optionalCssDeclaration('top', layout.y),
-    ...(typeof layout.width === 'number'
-      ? [cssDeclaration('width', layout.width)]
-      : []),
-    ...(typeof layout.height === 'number'
-      ? [cssDeclaration('height', layout.height)]
-      : []),
+    ...(isRootChild ? constrainedPositionCss(layout) : []),
+    ...layoutSizeDeclaration('width', layout.width),
+    ...layoutSizeDeclaration('height', layout.height),
+    ...optionalCssDeclaration('minWidth', layout.minWidth),
+    ...optionalCssDeclaration('maxWidth', layout.maxWidth),
+    ...optionalCssDeclaration('minHeight', layout.minHeight),
+    ...optionalCssDeclaration('maxHeight', layout.maxHeight),
   ]
 
   if (layout.mode === 'flex-column') {

@@ -73,6 +73,70 @@ function visualStyle(node: UINode) {
   } as const
 }
 
+function layoutSizeStyle(node: UINode) {
+  return {
+    height:
+      node.layout.height === 'hug'
+        ? 'auto'
+        : node.layout.height === 'fill'
+          ? '100%'
+          : node.layout.height,
+    maxHeight: node.layout.maxHeight,
+    maxWidth: node.layout.maxWidth,
+    minHeight: node.layout.minHeight,
+    minWidth: node.layout.minWidth,
+    width:
+      node.layout.width === 'hug'
+        ? 'auto'
+        : node.layout.width === 'fill'
+          ? '100%'
+          : node.layout.width,
+  } as const
+}
+
+function constrainedPositionStyle(node: UINode, isRootChild: boolean) {
+  if (!isRootChild) {
+    return {}
+  }
+
+  const horizontal = node.layout.constraints?.horizontal ?? 'left'
+  const vertical = node.layout.constraints?.vertical ?? 'top'
+  const transforms: string[] = []
+  const style: React.CSSProperties = {
+    position: 'absolute',
+  }
+
+  if (horizontal === 'center') {
+    style.left = '50%'
+    transforms.push('translateX(-50%)')
+  } else if (horizontal === 'right') {
+    style.right = node.layout.x
+  } else if (horizontal === 'stretch') {
+    style.left = node.layout.x
+    style.right = node.layout.x
+  } else {
+    style.left = node.layout.x
+  }
+
+  if (vertical === 'center') {
+    style.top = '50%'
+    transforms.push('translateY(-50%)')
+  } else if (vertical === 'bottom') {
+    style.bottom = node.layout.y
+  } else if (vertical === 'stretch') {
+    style.top = node.layout.y
+    style.bottom = node.layout.y
+  } else {
+    style.top = node.layout.y
+  }
+
+  if (transforms.length > 0) {
+    style.transform = transforms.join(' ')
+  }
+
+  return style
+}
+
 export function CanvasNode({
   document,
   node,
@@ -85,15 +149,14 @@ export function CanvasNode({
   const canDrag =
     canInteract &&
     node.parentId === document.rootNodeId &&
-    node.layout.mode === 'absolute'
+    node.layout.mode === 'absolute' &&
+    (node.layout.constraints?.horizontal ?? 'left') === 'left' &&
+    (node.layout.constraints?.vertical ?? 'top') === 'top'
   const absoluteStyle = {
     cursor: canDrag ? 'grab' : undefined,
-    height: node.layout.height === 'hug' ? undefined : node.layout.height,
-    left: node.layout.x,
-    position: node.parentId === document.rootNodeId ? 'absolute' : undefined,
-    top: node.layout.y,
-    width: node.layout.width === 'hug' ? undefined : node.layout.width,
-  } as const
+    ...constrainedPositionStyle(node, node.parentId === document.rootNodeId),
+    ...layoutSizeStyle(node),
+  } as React.CSSProperties
   const startDrag = (event: React.PointerEvent<HTMLElement>) => {
     if (!canDrag) {
       return

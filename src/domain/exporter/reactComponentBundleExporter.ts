@@ -93,7 +93,9 @@ function reactReadme() {
     '',
     '把 `src/GeneratedPage.tsx` 和 `src/components/` 放入 React + Tailwind 项目中使用。',
     '',
-    '需要项目已配置 Tailwind CSS。`data-ui-node-id` 用于把设计节点稳定映射到生成代码。',
+    '需要项目已配置 Tailwind CSS。导出的 `w-full`、`h-auto`、`min-w-*`、`max-w-*` 和定位类来自设计节点的响应式布局语义。',
+    '',
+    '`data-ui-node-id` 用于把设计节点稳定映射到生成代码。',
   ].join('\n')
 }
 

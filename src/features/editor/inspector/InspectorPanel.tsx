@@ -1,4 +1,5 @@
 import type { ExportTargetId } from '../../../domain/exporter/exportTypes'
+import type { LayoutSize } from '../../../domain/model/types'
 import { useEditorStore } from '../../../store/editorStore'
 import { CodePreviewPanel } from '../../preview/CodePreviewPanel'
 
@@ -8,6 +9,20 @@ function numericInputValue(value: number | 'hug' | 'fill' | undefined) {
 
 function styleNumberValue(value: number | undefined, defaultValue = 0) {
   return value ?? defaultValue
+}
+
+function sizeModeValue(value: LayoutSize) {
+  return typeof value === 'number' ? 'fixed' : value
+}
+
+function numberOrUndefined(value: string) {
+  if (value.trim() === '') {
+    return undefined
+  }
+
+  const next = Number(value)
+
+  return Number.isFinite(next) ? next : undefined
 }
 
 interface InspectorPanelProps {
@@ -100,6 +115,29 @@ export function InspectorPanel({ exportTargetId }: InspectorPanelProps) {
                 />
               </label>
               <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>宽度模式</span>
+                <select
+                  className="rounded-md border border-stone-300 bg-white px-3 py-2"
+                  onChange={(event) => {
+                    const mode = event.target.value
+
+                    updateSelectedNodeLayout({
+                      width:
+                        mode === 'fill'
+                          ? 'fill'
+                          : mode === 'hug'
+                            ? 'hug'
+                            : numericInputValue(selectedNode.layout.width) || 320,
+                    })
+                  }}
+                  value={sizeModeValue(selectedNode.layout.width)}
+                >
+                  <option value="fixed">固定</option>
+                  <option value="fill">填充</option>
+                  <option value="hug">自适应</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
                 <span>高度</span>
                 <input
                   className="rounded-md border border-stone-300 px-3 py-2"
@@ -113,6 +151,129 @@ export function InspectorPanel({ exportTargetId }: InspectorPanelProps) {
                     numericInputValue(selectedNode.layout.height)
                   }
                 />
+              </label>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>高度模式</span>
+                <select
+                  className="rounded-md border border-stone-300 bg-white px-3 py-2"
+                  onChange={(event) => {
+                    const mode = event.target.value
+
+                    updateSelectedNodeLayout({
+                      height:
+                        mode === 'fill'
+                          ? 'fill'
+                          : mode === 'hug'
+                            ? 'hug'
+                            : numericInputValue(selectedNode.layout.height) || 240,
+                    })
+                  }}
+                  value={sizeModeValue(selectedNode.layout.height)}
+                >
+                  <option value="fixed">固定</option>
+                  <option value="fill">填充</option>
+                  <option value="hug">自适应</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>最小宽度</span>
+                <input
+                  className="rounded-md border border-stone-300 px-3 py-2"
+                  inputMode="numeric"
+                  onChange={(event) =>
+                    updateSelectedNodeLayout({
+                      minWidth: numberOrUndefined(event.target.value),
+                    })
+                  }
+                  value={selectedNode.layout.minWidth ?? ''}
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>最大宽度</span>
+                <input
+                  className="rounded-md border border-stone-300 px-3 py-2"
+                  inputMode="numeric"
+                  onChange={(event) =>
+                    updateSelectedNodeLayout({
+                      maxWidth: numberOrUndefined(event.target.value),
+                    })
+                  }
+                  value={selectedNode.layout.maxWidth ?? ''}
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>最小高度</span>
+                <input
+                  className="rounded-md border border-stone-300 px-3 py-2"
+                  inputMode="numeric"
+                  onChange={(event) =>
+                    updateSelectedNodeLayout({
+                      minHeight: numberOrUndefined(event.target.value),
+                    })
+                  }
+                  value={selectedNode.layout.minHeight ?? ''}
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>最大高度</span>
+                <input
+                  className="rounded-md border border-stone-300 px-3 py-2"
+                  inputMode="numeric"
+                  onChange={(event) =>
+                    updateSelectedNodeLayout({
+                      maxHeight: numberOrUndefined(event.target.value),
+                    })
+                  }
+                  value={selectedNode.layout.maxHeight ?? ''}
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>水平约束</span>
+                <select
+                  className="rounded-md border border-stone-300 bg-white px-3 py-2"
+                  onChange={(event) =>
+                    updateSelectedNodeLayout({
+                      constraints: {
+                        ...selectedNode.layout.constraints,
+                        horizontal: event.target.value as
+                          | 'left'
+                          | 'center'
+                          | 'right'
+                          | 'stretch',
+                      },
+                    })
+                  }
+                  value={selectedNode.layout.constraints?.horizontal ?? 'left'}
+                >
+                  <option value="left">左侧</option>
+                  <option value="center">居中</option>
+                  <option value="right">右侧</option>
+                  <option value="stretch">拉伸</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>垂直约束</span>
+                <select
+                  className="rounded-md border border-stone-300 bg-white px-3 py-2"
+                  onChange={(event) =>
+                    updateSelectedNodeLayout({
+                      constraints: {
+                        ...selectedNode.layout.constraints,
+                        vertical: event.target.value as
+                          | 'top'
+                          | 'center'
+                          | 'bottom'
+                          | 'stretch',
+                      },
+                    })
+                  }
+                  value={selectedNode.layout.constraints?.vertical ?? 'top'}
+                >
+                  <option value="top">顶部</option>
+                  <option value="center">居中</option>
+                  <option value="bottom">底部</option>
+                  <option value="stretch">拉伸</option>
+                </select>
               </label>
               {selectedNode.type !== 'container' &&
               selectedNode.type !== 'frame' &&
