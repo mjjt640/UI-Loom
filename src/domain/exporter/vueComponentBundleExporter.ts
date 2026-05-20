@@ -1,5 +1,6 @@
 import type { PageDocument } from '../model/types'
 import type { ExportBundle, GeneratedFile } from './exportTypes'
+import { mappingsForSubtree } from './codeMapping'
 import { uniqueComponentNamesForNodes } from './componentNaming'
 import type { HtmlRenderableNode } from './htmlRenderEngine'
 import {
@@ -142,13 +143,41 @@ function renderComponentFile(document: PageDocument, boundary: VueComponentBound
   ].join('\n')
 }
 
+function vueReadme(boundaries: VueComponentBoundary[]) {
+  const componentPaths = boundaries.map(
+    (boundary) => `- \`components/${boundary.fileName}.vue\``,
+  )
+
+  return [
+    '# UI Loom Vue Export',
+    '',
+    '把 `GeneratedPage.vue` 和 `components/` 放入 Vue 3 项目中使用。',
+    '',
+    '组件文件:',
+    ...componentPaths,
+    '',
+    '`data-ui-node-id` 用于把设计节点稳定映射到生成代码。',
+  ].join('\n')
+}
+
 export function exportToVueComponentBundle(document: PageDocument): ExportBundle {
   const boundaries = componentBoundaries(document)
+  const boundaryIds = new Set(boundaries.map((boundary) => boundary.node.id))
   const componentFiles: GeneratedFile[] = boundaries.map((boundary) => ({
     path: `components/${boundary.fileName}.vue`,
     language: 'vue',
     content: renderComponentFile(document, boundary),
   }))
+  const pageMappings = visibleRootNodes(document)
+    .filter((node) => !boundaryIds.has(node.id))
+    .flatMap((node) => mappingsForSubtree(document, node, 'GeneratedPage.vue'))
+  const componentMappings = boundaries.flatMap((boundary) =>
+    mappingsForSubtree(
+      document,
+      boundary.node,
+      `components/${boundary.fileName}.vue`,
+    ),
+  )
 
   return {
     target: 'vue3-sfc',
@@ -159,6 +188,12 @@ export function exportToVueComponentBundle(document: PageDocument): ExportBundle
         content: renderGeneratedPage(document, boundaries),
       },
       ...componentFiles,
+      {
+        path: 'README.md',
+        language: 'md',
+        content: vueReadme(boundaries),
+      },
     ],
+    mappings: [...pageMappings, ...componentMappings],
   }
 }

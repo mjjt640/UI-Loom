@@ -62,6 +62,17 @@ function flexStyle(node: UINode) {
   } as const
 }
 
+function visualStyle(node: UINode) {
+  return {
+    background: node.style.background,
+    borderColor: node.style.borderColor,
+    borderRadius: node.style.radius,
+    borderWidth: node.style.borderWidth,
+    boxShadow: node.style.shadow,
+    opacity: node.style.opacity,
+  } as const
+}
+
 export function CanvasNode({
   document,
   node,
@@ -179,6 +190,7 @@ export function CanvasNode({
         onPointerDown={startDrag}
         style={{
           ...absoluteStyle,
+          ...visualStyle(node),
           color: node.style.color,
           fontSize: node.style.fontSize,
           fontWeight: node.style.fontWeight,
@@ -199,8 +211,7 @@ export function CanvasNode({
         onPointerDown={startDrag}
         style={{
           ...absoluteStyle,
-          background: node.style.background,
-          borderRadius: node.style.radius,
+          ...visualStyle(node),
           color: node.style.color,
           fontSize: node.style.fontSize,
           fontWeight: node.style.fontWeight,
@@ -214,27 +225,33 @@ export function CanvasNode({
   }
 
   if (node.type === 'image') {
+    const hasImageSource = Boolean(node.content.src)
+
     return (
-      <button
-        aria-label={node.content.alt ?? '图片描述'}
+      <div
+        aria-label={hasImageSource ? undefined : node.content.alt ?? '图片描述'}
         className={`absolute block overflow-hidden bg-stone-100 ${selectionClass}`}
         onClick={selectCurrentNode}
         onPointerDown={startDrag}
+        role={hasImageSource ? undefined : 'img'}
         style={{
           ...absoluteStyle,
-          borderRadius: node.style.radius,
+          ...visualStyle(node),
         }}
-        type="button"
       >
-        {node.content.src ? (
+        {hasImageSource ? (
           <img
             alt={node.content.alt ?? ''}
             className="h-full w-full object-cover"
             src={node.content.src}
           />
-        ) : null}
+        ) : (
+          <span className="flex h-full w-full items-center justify-center text-xs text-stone-500">
+            {node.content.alt ?? '图片描述'}
+          </span>
+        )}
         {resizeHandle}
-      </button>
+      </div>
     )
   }
 
@@ -247,10 +264,7 @@ export function CanvasNode({
         onPointerDown={startDrag}
         style={{
           ...absoluteStyle,
-          background: node.style.background,
-          borderColor: node.style.borderColor,
-          borderRadius: node.style.radius,
-          borderWidth: node.style.borderWidth,
+          ...visualStyle(node),
         }}
         type="button"
       >
@@ -281,10 +295,7 @@ export function CanvasNode({
         role="group"
         style={{
           ...absoluteStyle,
-          background: node.style.background,
-          borderColor: node.style.borderColor,
-          borderRadius: node.style.radius,
-          borderWidth: node.style.borderWidth,
+          ...visualStyle(node),
           ...flexStyle(node),
         }}
       >

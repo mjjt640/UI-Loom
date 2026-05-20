@@ -17,8 +17,10 @@ import {
   removeNode,
   selectNodes,
   setNodeLocked,
+  setNodeComponentHint,
   setNodeVisible,
   updateNodeLayout,
+  updateNodeName,
   ungroupSelectedNode,
 } from '../domain/commands/editorCommands'
 import { createEmptyDocument } from '../domain/model/factories'
@@ -59,8 +61,10 @@ interface EditorState {
   ungroupSelectedNode: () => void
   setLayerLocked: (nodeId: string, locked: boolean) => void
   setLayerVisible: (nodeId: string, visible: boolean) => void
+  updateSelectedNodeComponentHint: (componentHint: string) => void
   updateSelectedNodeContent: (content: ContentProps) => void
   updateSelectedNodeLayout: (layout: Partial<LayoutProps>) => void
+  updateSelectedNodeName: (name: string) => void
   updateSelectedNodeStyle: (style: StyleProps) => void
 }
 
@@ -225,6 +229,18 @@ export const useEditorStore = create<EditorState>((set) => ({
     set((state) =>
       withPersistedDocument(setNodeVisible(state.document, nodeId, visible)),
     ),
+  updateSelectedNodeComponentHint: (componentHint) =>
+    set((state) => {
+      const [nodeId] = state.document.selectedNodeIds
+
+      if (!nodeId) {
+        return state
+      }
+
+      return withPersistedDocument(
+        setNodeComponentHint(state.document, nodeId, componentHint),
+      )
+    }),
   updateSelectedNodeContent: (content) =>
     set((state) => {
       const [nodeId] = state.document.selectedNodeIds
@@ -246,6 +262,16 @@ export const useEditorStore = create<EditorState>((set) => ({
       }
 
       return withPersistedDocument(updateNodeLayout(state.document, nodeId, layout))
+    }),
+  updateSelectedNodeName: (name) =>
+    set((state) => {
+      const [nodeId] = state.document.selectedNodeIds
+
+      if (!nodeId) {
+        return state
+      }
+
+      return withPersistedDocument(updateNodeName(state.document, nodeId, name))
     }),
   updateSelectedNodeStyle: (style) =>
     set((state) => {

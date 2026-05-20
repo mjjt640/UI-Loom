@@ -1,5 +1,6 @@
 import type { PageDocument } from '../model/types'
 import type { ExportBundle } from './exportTypes'
+import { mappingsForRootFile } from './codeMapping'
 import { renderCss, renderHtmlBody } from './htmlRenderEngine'
 
 function renderIndexHtml(document: PageDocument) {
@@ -51,5 +52,6 @@ export function exportToHtmlCssJsBundle(document: PageDocument): ExportBundle {
         ].join('\n'),
       },
     ],
+    mappings: mappingsForRootFile(document, 'index.html'),
   }
 }

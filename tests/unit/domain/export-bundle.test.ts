@@ -76,7 +76,7 @@ describe('export bundle architecture', () => {
     expect(bundle.files[0].content).toContain('提交')
   })
 
-  it('exports Vue 3 as a single file component', () => {
+  it('exports Vue 3 as a generated page with README guidance', () => {
     const document = createEmptyDocument('Vue Test')
     const next = insertChildNode(
       document,
@@ -86,7 +86,10 @@ describe('export bundle architecture', () => {
     const bundle = exportToVue3Bundle(next)
 
     expect(bundle.target).toBe('vue3-sfc')
-    expect(bundle.files.map((file) => file.path)).toEqual(['GeneratedPage.vue'])
+    expect(bundle.files.map((file) => file.path)).toEqual([
+      'GeneratedPage.vue',
+      'README.md',
+    ])
     expect(bundle.files[0].content).toContain('<template>')
     expect(bundle.files[0].content).toContain('<script setup')
     expect(bundle.files[0].content).toContain('保存')

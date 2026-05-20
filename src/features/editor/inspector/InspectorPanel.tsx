@@ -6,6 +6,10 @@ function numericInputValue(value: number | 'hug' | 'fill' | undefined) {
   return typeof value === 'number' ? value : 0
 }
 
+function styleNumberValue(value: number | undefined, defaultValue = 0) {
+  return value ?? defaultValue
+}
+
 interface InspectorPanelProps {
   exportTargetId: ExportTargetId
 }
@@ -15,8 +19,14 @@ export function InspectorPanel({ exportTargetId }: InspectorPanelProps) {
   const updateSelectedNodeContent = useEditorStore(
     (state) => state.updateSelectedNodeContent,
   )
+  const updateSelectedNodeComponentHint = useEditorStore(
+    (state) => state.updateSelectedNodeComponentHint,
+  )
   const updateSelectedNodeLayout = useEditorStore(
     (state) => state.updateSelectedNodeLayout,
+  )
+  const updateSelectedNodeName = useEditorStore(
+    (state) => state.updateSelectedNodeName,
   )
   const updateSelectedNodeStyle = useEditorStore(
     (state) => state.updateSelectedNodeStyle,
@@ -29,6 +39,15 @@ export function InspectorPanel({ exportTargetId }: InspectorPanelProps) {
   const selectedCount = document.selectedNodeIds.length
   const showLayoutControls =
     selectedNode?.type === 'frame' || selectedNode?.type === 'container'
+  const showComponentControls =
+    selectedNode?.type === 'frame' || selectedNode?.type === 'container'
+  const showAppearanceControls =
+    selectedNode?.type === 'container' ||
+    selectedNode?.type === 'frame' ||
+    selectedNode?.type === 'rect' ||
+    selectedNode?.type === 'button' ||
+    selectedNode?.type === 'image' ||
+    selectedNode?.type === 'text'
   const selectedPadding = selectedNode?.layout.padding?.top ?? 0
 
   return (
@@ -106,6 +125,29 @@ export function InspectorPanel({ exportTargetId }: InspectorPanelProps) {
                   移入容器
                 </button>
               ) : null}
+            </div>
+          ) : null}
+          {selectedNode && showComponentControls ? (
+            <div className="space-y-3 rounded-xl border border-stone-200 p-3">
+              <p className="text-sm font-medium text-stone-700">组件语义</p>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>图层名称</span>
+                <input
+                  className="rounded-md border border-stone-300 px-3 py-2"
+                  onChange={(event) => updateSelectedNodeName(event.target.value)}
+                  value={selectedNode.name}
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>组件标识</span>
+                <input
+                  className="rounded-md border border-stone-300 px-3 py-2"
+                  onChange={(event) =>
+                    updateSelectedNodeComponentHint(event.target.value)
+                  }
+                  value={selectedNode.meta.componentHint ?? ''}
+                />
+              </label>
             </div>
           ) : null}
           {selectedNode && showLayoutControls ? (
@@ -257,8 +299,9 @@ export function InspectorPanel({ exportTargetId }: InspectorPanelProps) {
               </label>
             </div>
           ) : null}
-          {selectedNode?.type === 'container' || selectedNode?.type === 'rect' ? (
-            <div className="space-y-3">
+          {selectedNode && showAppearanceControls ? (
+            <div className="space-y-3 rounded-xl border border-stone-200 p-3">
+              <p className="text-sm font-medium text-stone-700">外观</p>
               <label className="flex flex-col gap-2 text-sm text-stone-600">
                 <span>背景颜色</span>
                 <input
@@ -269,6 +312,31 @@ export function InspectorPanel({ exportTargetId }: InspectorPanelProps) {
                   value={selectedNode.style.background ?? ''}
                 />
               </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex flex-col gap-2 text-sm text-stone-600">
+                  <span>边框宽度</span>
+                  <input
+                    className="rounded-md border border-stone-300 px-3 py-2"
+                    inputMode="numeric"
+                    onChange={(event) =>
+                      updateSelectedNodeStyle({
+                        borderWidth: Number(event.target.value) || 0,
+                      })
+                    }
+                    value={styleNumberValue(selectedNode.style.borderWidth)}
+                  />
+                </label>
+                <label className="flex flex-col gap-2 text-sm text-stone-600">
+                  <span>边框颜色</span>
+                  <input
+                    className="rounded-md border border-stone-300 px-3 py-2"
+                    onChange={(event) =>
+                      updateSelectedNodeStyle({ borderColor: event.target.value })
+                    }
+                    value={selectedNode.style.borderColor ?? ''}
+                  />
+                </label>
+              </div>
               <label className="flex flex-col gap-2 text-sm text-stone-600">
                 <span>圆角</span>
                 <input
@@ -280,6 +348,38 @@ export function InspectorPanel({ exportTargetId }: InspectorPanelProps) {
                     })
                   }
                   value={selectedNode.style.radius ?? 0}
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>阴影</span>
+                <input
+                  className="rounded-md border border-stone-300 px-3 py-2"
+                  onChange={(event) =>
+                    updateSelectedNodeStyle({ shadow: event.target.value })
+                  }
+                  value={selectedNode.style.shadow ?? ''}
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm text-stone-600">
+                <span>透明度</span>
+                <input
+                  className="rounded-md border border-stone-300 px-3 py-2"
+                  key={selectedNodeId}
+                  inputMode="decimal"
+                  onChange={(event) => {
+                    const nextDraft = event.target.value
+                    const nextOpacity = Number(nextDraft)
+
+                    if (nextDraft === '') {
+                      updateSelectedNodeStyle({ opacity: undefined })
+                      return
+                    }
+
+                    if (Number.isFinite(nextOpacity)) {
+                      updateSelectedNodeStyle({ opacity: nextOpacity })
+                    }
+                  }}
+                  defaultValue={styleNumberValue(selectedNode.style.opacity, 1)}
                 />
               </label>
             </div>

@@ -95,7 +95,7 @@ describe('React componentized export', () => {
     )
     expect(bundle.files[0].content).toContain('<HeroSection />')
     expect(bundle.files[1].content).toContain('export function HeroSection()')
-    expect(bundle.files[1].content).toContain('aria-label="Frame 节点"')
+    expect(bundle.files[1].content).toContain('aria-label="Hero Section"')
     expect(bundle.files[1].content).toContain('开始体验')
   })
 })
@@ -120,13 +120,14 @@ describe('Vue componentized export', () => {
     expect(bundle.files.map((file) => file.path)).toEqual([
       'GeneratedPage.vue',
       'components/HeroSection.vue',
+      'README.md',
     ])
     expect(bundle.files[0].content).toContain(
       "import HeroSection from './components/HeroSection.vue'",
     )
     expect(bundle.files[0].content).toContain('<HeroSection />')
     expect(bundle.files[1].content).toContain('<template>')
-    expect(bundle.files[1].content).toContain('aria-label="Frame 节点"')
+    expect(bundle.files[1].content).toContain('aria-label="Hero Section"')
     expect(bundle.files[1].content).toContain('立即开始')
     expect(bundle.files[1].content).toContain('<style scoped>')
   })

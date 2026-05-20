@@ -1,4 +1,5 @@
 import type { LayoutProps, PageDocument, StyleProps, UINode } from '../model/types'
+import { nodeMappingAttribute } from './codeMapping'
 
 type HtmlRenderableNodeType =
   | 'text'
@@ -128,6 +129,10 @@ function nodeClassName(node: UINode) {
   return `ui-loom-node-${node.id.replaceAll(/[^a-zA-Z0-9_-]/g, '-')}`
 }
 
+function ariaLabelForNode(node: UINode, defaultLabel: string, localizedLabel: string) {
+  return node.name === defaultLabel ? localizedLabel : node.name
+}
+
 function renderChildren(document: PageDocument, node: HtmlRenderableNode): string {
   return visibleChildNodes(document, node)
     .map((childNode) => renderHtmlNode(document, childNode))
@@ -141,34 +146,36 @@ function visibleChildNodes(document: PageDocument, node: UINode) {
 }
 
 function renderTextNode(node: HtmlRenderableNode) {
-  return `<p class="${nodeClassName(node)}">${escapeHtml(node.content.text)}</p>`
+  return `<p ${nodeMappingAttribute(node)} class="${nodeClassName(node)}">${escapeHtml(node.content.text)}</p>`
 }
 
 function renderButtonNode(node: HtmlRenderableNode) {
-  return `<button class="${nodeClassName(node)}" type="button">${escapeHtml(
+  return `<button ${nodeMappingAttribute(node)} class="${nodeClassName(node)}" type="button">${escapeHtml(
     node.content.text,
   )}</button>`
 }
 
 function renderImageNode(node: HtmlRenderableNode) {
-  return `<img class="${nodeClassName(node)}" src="${escapeHtml(
+  return `<img ${nodeMappingAttribute(node)} class="${nodeClassName(node)}" src="${escapeHtml(
     node.content.src,
   )}" alt="${escapeHtml(node.content.alt)}" />`
 }
 
 function renderRectNode(node: HtmlRenderableNode) {
-  return `<div class="${nodeClassName(node)}" aria-label="矩形图层"></div>`
+  return `<div ${nodeMappingAttribute(node)} class="${nodeClassName(node)}" aria-label="${escapeHtml(
+    ariaLabelForNode(node, 'Rectangle', '矩形图层'),
+  )}"></div>`
 }
 
 function renderContainerNode(document: PageDocument, node: HtmlRenderableNode) {
   const children = renderChildren(document, node)
 
   if (!children) {
-    return `<div class="${nodeClassName(node)}"></div>`
+    return `<div ${nodeMappingAttribute(node)} class="${nodeClassName(node)}"></div>`
   }
 
   return [
-    `<div class="${nodeClassName(node)}">`,
+    `<div ${nodeMappingAttribute(node)} class="${nodeClassName(node)}">`,
     indent(children),
     '</div>',
   ].join('\n')
@@ -178,13 +185,17 @@ function renderFrameNode(document: PageDocument, node: HtmlRenderableNode) {
   const children = renderChildren(document, node)
 
   if (!children) {
-    return `<div class="${nodeClassName(node)}" aria-label="Frame 节点"></div>`
+    return `<section ${nodeMappingAttribute(node)} class="${nodeClassName(node)}" aria-label="${escapeHtml(
+      ariaLabelForNode(node, 'Frame', 'Frame 节点'),
+    )}"></section>`
   }
 
   return [
-    `<div class="${nodeClassName(node)}" aria-label="Frame 节点">`,
+    `<section ${nodeMappingAttribute(node)} class="${nodeClassName(node)}" aria-label="${escapeHtml(
+      ariaLabelForNode(node, 'Frame', 'Frame 节点'),
+    )}">`,
     indent(children),
-    '</div>',
+    '</section>',
   ].join('\n')
 }
 
@@ -192,11 +203,11 @@ function renderGroupNode(document: PageDocument, node: HtmlRenderableNode) {
   const children = renderChildren(document, node)
 
   if (!children) {
-    return `<div class="${nodeClassName(node)}" aria-label="图层组"></div>`
+    return `<div ${nodeMappingAttribute(node)} class="${nodeClassName(node)}" aria-label="图层组"></div>`
   }
 
   return [
-    `<div class="${nodeClassName(node)}" aria-label="图层组">`,
+    `<div ${nodeMappingAttribute(node)} class="${nodeClassName(node)}" aria-label="图层组">`,
     indent(children),
     '</div>',
   ].join('\n')

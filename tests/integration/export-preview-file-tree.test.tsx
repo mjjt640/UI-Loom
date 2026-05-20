@@ -41,4 +41,21 @@ describe('export preview file tree', () => {
     expect(within(preview).getByRole('button', { name: 'components/Frame.vue' }))
       .toBeInTheDocument()
   })
+
+  it('switches the active preview file to the selected node mapping', async () => {
+    const user = userEvent.setup()
+    render(<EditorScreen />)
+
+    await user.click(screen.getByRole('button', { name: '新增容器' }))
+    await user.click(screen.getByRole('button', { name: '新增按钮' }))
+    await user.click(screen.getByRole('button', { name: '按钮' }))
+    await user.click(screen.getByRole('button', { name: '移入容器' }))
+
+    const preview = screen.getByRole('region', { name: '代码预览' })
+
+    expect(
+      within(preview).getByRole('button', { name: 'src/components/Container.tsx' }),
+    ).toHaveClass('bg-stone-900')
+    expect(within(preview).getByText(/data-ui-node-id=/)).toBeInTheDocument()
+  })
 })

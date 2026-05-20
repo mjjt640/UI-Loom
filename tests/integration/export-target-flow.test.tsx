@@ -14,11 +14,11 @@ describe('export target flow', () => {
 
   it('exports the selected Vue 3 target as a vue file', async () => {
     const user = userEvent.setup()
-    let exportedBlob: Blob | undefined
-    let downloadedFilename = ''
+    const exportedBlobs: Blob[] = []
+    const downloadedFilenames: string[] = []
     vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
       if (blob instanceof Blob) {
-        exportedBlob = blob
+        exportedBlobs.push(blob)
       }
 
       return 'blob:vue-export'
@@ -26,7 +26,7 @@ describe('export target flow', () => {
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined)
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(
       function click(this: HTMLAnchorElement) {
-        downloadedFilename = this.download
+        downloadedFilenames.push(this.download)
       },
     )
 
@@ -35,7 +35,9 @@ describe('export target flow', () => {
     await user.selectOptions(screen.getByLabelText('导出格式'), 'vue3-sfc')
     await user.click(screen.getByText('导出代码'))
 
-    expect(downloadedFilename).toBe('GeneratedPage.vue')
+    expect(downloadedFilenames).toEqual(['GeneratedPage.vue', 'README.md'])
+
+    const [exportedBlob] = exportedBlobs
 
     if (!(exportedBlob instanceof Blob)) {
       throw new Error('Expected Vue export to create a Blob')

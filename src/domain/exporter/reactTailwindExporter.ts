@@ -1,4 +1,5 @@
 import type { PageDocument, UINode } from '../model/types'
+import { nodeMappingAttribute } from './codeMapping'
 import {
   boxStyleToClassName,
   layoutAlignmentToClassName,
@@ -20,6 +21,10 @@ export function indentReact(value: string) {
 
 function className(...values: string[]) {
   return values.filter(Boolean).join(' ')
+}
+
+function ariaLabelForNode(node: UINode, defaultLabel: string) {
+  return node.name === defaultLabel ? defaultLabel : node.name
 }
 
 export function resolveReactRenderableNode(document: PageDocument, nodeId: string) {
@@ -52,25 +57,29 @@ export function visibleReactChildNodes(document: PageDocument, node: UINode) {
 
 export function renderReactNode(document: PageDocument, node: UINode): string {
   if (node.type === 'text') {
-    return `      <div className="${textStyleToClassName(node.style)}">${escapeText(
+    return `      <div ${nodeMappingAttribute(node)} className="${textStyleToClassName(node.style)}">${escapeText(
       node.content.text,
     )}</div>`
   }
 
   if (node.type === 'button') {
-    return `      <button className="${boxStyleToClassName(node.style)} px-4 py-2">${escapeText(
+    return `      <button ${nodeMappingAttribute(node)} type="button" className="${boxStyleToClassName(node.style)} px-4 py-2">${escapeText(
       node.content.text,
     )}</button>`
   }
 
   if (node.type === 'image') {
-    return `      <img className="${boxStyleToClassName(
+    return `      <img ${nodeMappingAttribute(node)} className="${boxStyleToClassName(
       node.style,
     )}" src="${escapeText(node.content.src)}" alt="${escapeText(node.content.alt)}" />`
   }
 
   if (node.type === 'rect') {
-    return `      <div aria-label="矩形图层" className="${boxStyleToClassName(
+    return `      <div ${nodeMappingAttribute(node)} aria-label="${escapeText(
+      ariaLabelForNode(node, 'Rectangle') === 'Rectangle'
+        ? '矩形图层'
+        : ariaLabelForNode(node, 'Rectangle'),
+    )}" className="${boxStyleToClassName(
       node.style,
     )}"></div>`
   }
@@ -87,10 +96,10 @@ export function renderReactNode(document: PageDocument, node: UINode): string {
     )
 
     if (!children) {
-      return `      <div className="${classes}"></div>`
+      return `      <div ${nodeMappingAttribute(node)} className="${classes}"></div>`
     }
 
-    return [`      <div className="${classes}">`, indentReact(children), '      </div>'].join(
+    return [`      <div ${nodeMappingAttribute(node)} className="${classes}">`, indentReact(children), '      </div>'].join(
       '\n',
     )
   }
@@ -107,13 +116,21 @@ export function renderReactNode(document: PageDocument, node: UINode): string {
     )
 
     if (!children) {
-      return `      <div aria-label="Frame 节点" className="${classes}"></div>`
+      return `      <section ${nodeMappingAttribute(node)} aria-label="${escapeText(
+        ariaLabelForNode(node, 'Frame') === 'Frame'
+          ? 'Frame 节点'
+          : ariaLabelForNode(node, 'Frame'),
+      )}" className="${classes}"></section>`
     }
 
     return [
-      `      <div aria-label="Frame 节点" className="${classes}">`,
+      `      <section ${nodeMappingAttribute(node)} aria-label="${escapeText(
+        ariaLabelForNode(node, 'Frame') === 'Frame'
+          ? 'Frame 节点'
+          : ariaLabelForNode(node, 'Frame'),
+      )}" className="${classes}">`,
       indentReact(children),
-      '      </div>',
+      '      </section>',
     ].join('\n')
   }
 
@@ -123,10 +140,10 @@ export function renderReactNode(document: PageDocument, node: UINode): string {
       .join('\n')
 
     if (!children) {
-      return '      <div aria-label="图层组"></div>'
+      return `      <div ${nodeMappingAttribute(node)} aria-label="图层组"></div>`
     }
 
-    return ['      <div aria-label="图层组">', indentReact(children), '      </div>'].join(
+    return [`      <div ${nodeMappingAttribute(node)} aria-label="图层组">`, indentReact(children), '      </div>'].join(
       '\n',
     )
   }

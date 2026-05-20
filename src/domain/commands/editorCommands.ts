@@ -270,6 +270,40 @@ export function setNodeLocked(
     : next
 }
 
+export function updateNodeName(
+  document: PageDocument,
+  nodeId: string,
+  name: string,
+): PageDocument {
+  const node = document.nodes[nodeId]
+
+  if (!node) {
+    throw new Error(`Node not found: ${nodeId}`)
+  }
+
+  return {
+    ...document,
+    nodes: {
+      ...document.nodes,
+      [nodeId]: {
+        ...node,
+        name,
+      },
+    },
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+export function setNodeComponentHint(
+  document: PageDocument,
+  nodeId: string,
+  componentHint: string,
+): PageDocument {
+  return updateNodeMeta(document, nodeId, {
+    componentHint: componentHint.trim() || undefined,
+  })
+}
+
 function moveChildInParent(
   document: PageDocument,
   nodeId: string,

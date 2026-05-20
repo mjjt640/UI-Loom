@@ -61,7 +61,7 @@ describe('alignment flow', () => {
     await user.click(screen.getByText('水平分布'))
 
     expect(screen.getByLabelText('矩形图层')).toHaveStyle({ left: '40px' })
-    expect(screen.getByRole('button', { name: '图片描述' })).toHaveStyle({
+    expect(screen.getByRole('img', { name: '图片描述' })).toHaveStyle({
       left: '180px',
     })
     expect(screen.getByLabelText('容器节点')).toHaveStyle({ left: '320px' })

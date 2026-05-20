@@ -4,7 +4,7 @@ test('user can add text and see exported code', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: '新增文本' }).click()
   await expect(page.getByRole('button', { name: '新文本' })).toBeVisible()
-  await expect(page.getByText('GeneratedPage')).toBeVisible()
+  await expect(page.getByText('export function GeneratedPage')).toBeVisible()
 })
 
 test('user can add basic nodes, edit image alt, and delete a node', async ({
@@ -27,7 +27,7 @@ test('user can add basic nodes, edit image alt, and delete a node', async ({
   await page.getByRole('button', { name: '删除节点' }).click()
   await expect(page.getByRole('button', { name: '按钮', exact: true })).toHaveCount(0)
   await expect(page.getByText('<img')).toBeVisible()
-  await expect(page.getByText('<div')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'src/components/Container.tsx' })).toBeVisible()
 })
 
 test('user can move a node into a flex container', async ({ page }) => {
