@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createEmptyDocument } from '../../src/domain/model/factories'
 import { EditorScreen } from '../../src/features/editor/EditorScreen'
 import { useEditorStore } from '../../src/store/editorStore'
@@ -17,8 +17,53 @@ async function clickCanvasPoint(
   ])
 }
 
+const remixIconFixture = [
+  {
+    category: 'Editor',
+    name: 'align-bottom',
+    source: 'Remix Icon',
+    svgPath: 'M4 5h16v2H4z',
+    tags: ['align', 'bottom', 'editor'],
+    viewBox: '0 0 24 24',
+  },
+  {
+    category: 'Editor',
+    name: 'align-right',
+    source: 'Remix Icon',
+    svgPath: 'M4 5h16v2H4z',
+    tags: ['align', 'right', 'editor'],
+    viewBox: '0 0 24 24',
+  },
+  {
+    category: 'Editor',
+    name: 'attachment-2',
+    source: 'Remix Icon',
+    svgPath: 'M4 5h16v2H4z',
+    tags: ['attachment', 'editor'],
+    viewBox: '0 0 24 24',
+  },
+] satisfies Array<{
+  category: string
+  name: string
+  source: 'Remix Icon'
+  svgPath: string
+  tags: string[]
+  viewBox: string
+}>
+
+function mockRemixIconFetch() {
+  return vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+    new Response(JSON.stringify(remixIconFixture), {
+      headers: { 'Content-Type': 'application/json' },
+      status: 200,
+    }),
+  )
+}
+
 describe('jsdesign inspired editor shell', () => {
   beforeEach(() => {
+    vi.restoreAllMocks()
+    mockRemixIconFetch()
     localStorage.clear()
     useEditorStore.setState({
       document: createEmptyDocument('Editor Shell Flow Test'),
@@ -322,7 +367,7 @@ describe('jsdesign inspired editor shell', () => {
       'aria-selected',
       'true',
     )
-    expect(screen.getByRole('button', { name: 'align-bottom' }))
+    expect(await screen.findByRole('button', { name: 'align-bottom' }))
       .toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'attachment-2' }))
       .toBeInTheDocument()
@@ -346,6 +391,20 @@ describe('jsdesign inspired editor shell', () => {
     expect(screen.getByLabelText('align-right 图标')).toBeInTheDocument()
     expect(screen.getByRole('listitem', { name: 'align-right' }))
       .toBeInTheDocument()
+  })
+
+  it('loads remix icon resources only when the resource panel is opened', async () => {
+    const user = userEvent.setup()
+
+    render(<EditorScreen />)
+
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('tab', { name: '资源' }))
+
+    expect(await screen.findByRole('button', { name: 'align-right' }))
+      .toBeInTheDocument()
+    expect(globalThis.fetch).toHaveBeenCalledWith('/remix-linear-icons.json')
   })
 
   it('selects the slice tool from the dedicated sidebar icon', async () => {

@@ -35,7 +35,7 @@ test('user can add text and see exported code', async ({ page }) => {
   await page.getByRole('button', { name: '文本工具' }).click()
   await dragOnCanvas(page, { endX: 160, endY: 32, startX: 0, startY: 0 })
   await expect(page.getByRole('button', { name: '新文本' })).toBeVisible()
-  await expect(page.getByText('export function GeneratedPage')).toBeVisible()
+  await expect(page.getByText(/export function GeneratedPage/)).toBeVisible()
 })
 
 test('user can add basic nodes, edit image alt, and delete a node', async ({
@@ -59,6 +59,8 @@ test('user can add basic nodes, edit image alt, and delete a node', async ({
   await expect(page.getByRole('button', { name: '按钮', exact: true })).toHaveCount(0)
   await expect(page.getByText('<img')).toBeVisible()
   await expect(page.getByRole('button', { name: 'src/components/Container.tsx' })).toBeVisible()
+  await page.getByRole('button', { name: 'src/components/Container.tsx' }).click()
+  await expect(page.getByText('aria-label="Container"')).toBeVisible()
 })
 
 test('user can move a node into a flex container', async ({ page }) => {
@@ -70,5 +72,6 @@ test('user can move a node into a flex container', async ({ page }) => {
 
   const container = page.getByRole('group', { name: '容器节点' })
   await expect(container.getByRole('button', { name: '按钮', exact: true })).toBeVisible()
-  await expect(page.getByText('flex flex-col gap-3')).toBeVisible()
+  await page.getByRole('button', { name: 'src/components/Container.tsx' }).click()
+  await expect(page.getByText(/flex flex-col gap-3/)).toBeVisible()
 })

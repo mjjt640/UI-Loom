@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useEditorStore } from '../../../store/editorStore'
 import type { UINode } from '../../../domain/model/types'
-import type { RemixIconResource } from '../../../domain/resources/remixIconLibrary'
+import {
+  loadRemixLinearIcons,
+  type RemixIconResource,
+} from '../../../domain/resources/remixIconLibrary'
 import type { EditorToolMode } from '../EditorScreen'
 
 type SidePanel = 'artboard' | 'components' | 'layers' | 'resources'
@@ -278,9 +281,9 @@ function ResourceLibraryPanel({
   useEffect(() => {
     let mounted = true
 
-    void import('../../../domain/resources/remixIconLibrary').then((module) => {
+    void loadRemixLinearIcons().then((loadedIcons) => {
       if (mounted) {
-        setIcons(module.remixLinearIcons)
+        setIcons(loadedIcons)
       }
     })
 

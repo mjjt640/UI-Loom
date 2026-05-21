@@ -49,7 +49,7 @@
 - Create: `src/domain/exporter/exportTypes.ts`
 - Create: `tests/unit/domain/export-bundle.test.ts`
 
-- [ ] **Step 1: Write failing tests for export target metadata**
+- [x] **Step 1: Write failing tests for export target metadata**
 
 Add `tests/unit/domain/export-bundle.test.ts`:
 
@@ -69,13 +69,13 @@ describe('exportTargets', () => {
 })
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `pnpm vitest run tests/unit/domain/export-bundle.test.ts`
 
 Expected: FAIL because `exportRegistry` does not exist.
 
-- [ ] **Step 3: Add export bundle types**
+- [x] **Step 3: Add export bundle types**
 
 Create `src/domain/exporter/exportTypes.ts`:
 
@@ -113,7 +113,7 @@ export interface ExportTargetDefinition {
 }
 ```
 
-- [ ] **Step 4: Add registry metadata**
+- [x] **Step 4: Add registry metadata**
 
 Create `src/domain/exporter/exportRegistry.ts`:
 
@@ -144,7 +144,7 @@ export const exportTargets: ExportTargetDefinition[] = [
 ]
 ```
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run: `pnpm vitest run tests/unit/domain/export-bundle.test.ts`
 
@@ -158,7 +158,7 @@ Expected: PASS.
 - Modify: `tests/unit/domain/react-tailwind-exporter.test.ts`
 - Modify: `tests/unit/domain/export-bundle.test.ts`
 
-- [ ] **Step 1: Add failing bundle test**
+- [x] **Step 1: Add failing bundle test**
 
 Append to `tests/unit/domain/export-bundle.test.ts`:
 
@@ -182,13 +182,13 @@ it('exports React Tailwind as a generated file bundle', () => {
 })
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `pnpm vitest run tests/unit/domain/export-bundle.test.ts`
 
 Expected: FAIL because `reactTailwindBundleExporter` does not exist.
 
-- [ ] **Step 3: Implement bundle exporter**
+- [x] **Step 3: Implement bundle exporter**
 
 Create `src/domain/exporter/reactTailwindBundleExporter.ts`:
 
@@ -220,7 +220,7 @@ export function exportToReactTailwindBundle(document: PageDocument): ExportBundl
 }
 ```
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run: `pnpm vitest run tests/unit/domain/export-bundle.test.ts tests/unit/domain/react-tailwind-exporter.test.ts`
 
@@ -234,7 +234,7 @@ Expected: PASS.
 - Create: `src/domain/exporter/vue3Exporter.ts`
 - Modify: `tests/unit/domain/export-bundle.test.ts`
 
-- [ ] **Step 1: Add failing exporter tests**
+- [x] **Step 1: Add failing exporter tests**
 
 Append to `tests/unit/domain/export-bundle.test.ts`:
 
@@ -284,17 +284,17 @@ it('exports Vue 3 as a single file component', () => {
 })
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `pnpm vitest run tests/unit/domain/export-bundle.test.ts`
 
 Expected: FAIL because exporters do not exist.
 
-- [ ] **Step 3: Implement explicit exporters**
+- [x] **Step 3: Implement explicit exporters**
 
 Create each exporter with direct mappings for `text`, `button`, `image`, and `container`. Unknown node types must be ignored only if they are not renderable design nodes yet; do not add a catch-all renderer.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run: `pnpm vitest run tests/unit/domain/export-bundle.test.ts`
 
@@ -309,7 +309,7 @@ Expected: PASS.
 - Modify: `src/features/preview/CodePreviewPanel.tsx`
 - Create: `tests/integration/export-target-flow.test.tsx`
 
-- [ ] **Step 1: Add failing interaction test**
+- [x] **Step 1: Add failing interaction test**
 
 Create `tests/integration/export-target-flow.test.tsx`:
 
@@ -356,17 +356,17 @@ describe('export target flow', () => {
 })
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `pnpm vitest run tests/integration/export-target-flow.test.tsx`
 
 Expected: FAIL because export format selector does not exist.
 
-- [ ] **Step 3: Implement target selector**
+- [x] **Step 3: Implement target selector**
 
 Update toolbar to include a `select` with label `导出格式`, options from `exportTargets`, and a `导出代码` button. The button should export the selected bundle and directly download every generated code file in that bundle. Do not use clipboard export or JSON manifest export for multi-file targets.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run: `pnpm vitest run tests/integration/export-target-flow.test.tsx`
 
@@ -383,7 +383,7 @@ Expected: PASS.
 - Modify: `src/store/editorStore.ts`
 - Create: `tests/integration/graphic-editing-flow.test.tsx`
 
-- [ ] **Step 1: Add failing test for rectangle creation**
+- [x] **Step 1: Add failing test for rectangle creation**
 
 Create `tests/integration/graphic-editing-flow.test.tsx`:
 
@@ -413,21 +413,21 @@ describe('graphic editing flow', () => {
 })
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `pnpm vitest run tests/integration/graphic-editing-flow.test.tsx`
 
 Expected: FAIL because rectangle tool does not exist.
 
-- [ ] **Step 3: Add explicit primitive type**
+- [x] **Step 3: Add explicit primitive type**
 
 Extend `NodeType` with `rect` and `group`. Add `createRectNode()` and `addRectNode()` without changing existing node behavior.
 
-- [ ] **Step 4: Render rect node**
+- [x] **Step 4: Render rect node**
 
 Render `rect` in `CanvasNode` with `aria-label="矩形图层"`.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run: `pnpm vitest run tests/integration/graphic-editing-flow.test.tsx`
 
@@ -439,7 +439,7 @@ Expected: PASS.
 - Modify: `src/features/editor/canvas/CanvasNode.tsx`
 - Modify: `tests/integration/graphic-editing-flow.test.tsx`
 
-- [ ] **Step 1: Add failing resize test**
+- [x] **Step 1: Add failing resize test**
 
 Append:
 
@@ -465,17 +465,17 @@ it('resizes a selected rectangle from the bottom-right handle', async () => {
 })
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `pnpm vitest run tests/integration/graphic-editing-flow.test.tsx`
 
 Expected: FAIL because resize handle does not exist.
 
-- [ ] **Step 3: Implement resize handle**
+- [x] **Step 3: Implement resize handle**
 
 Only selected absolute nodes with numeric width and height show the bottom-right handle. Pointer drag updates width and height through `updateSelectedNodeLayout`.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run: `pnpm vitest run tests/integration/graphic-editing-flow.test.tsx`
 
@@ -483,11 +483,11 @@ Expected: PASS.
 
 ## Final Verification
 
-- [ ] Run `pnpm test`
-- [ ] Run `pnpm build`
-- [ ] Run `pnpm e2e`
-- [ ] Confirm `git status --short` contains only intended files
-- [ ] Commit in logical chunks:
+- [x] Run `pnpm test`
+- [x] Run `pnpm build`
+- [x] Run `pnpm e2e`
+- [x] Confirm `git status --short` contains only intended files
+- [x] Commit in logical chunks:
   - `feat: add export bundle targets`
   - `feat: add selectable code export flow`
   - `feat: add graphic rectangle editing`

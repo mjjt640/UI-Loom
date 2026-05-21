@@ -12,9 +12,33 @@ import {
   addSlice,
 } from './editorTestActions'
 
+const remixIconFixture = [
+  {
+    category: 'Editor',
+    name: 'align-right',
+    source: 'Remix Icon',
+    svgPath: 'M4 5h16v2H4z',
+    tags: ['align', 'right', 'editor'],
+    viewBox: '0 0 24 24',
+  },
+] satisfies Array<{
+  category: string
+  name: string
+  source: 'Remix Icon'
+  svgPath: string
+  tags: string[]
+  viewBox: string
+}>
+
 describe('export target flow', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(remixIconFixture), {
+        headers: { 'Content-Type': 'application/json' },
+        status: 200,
+      }),
+    )
     localStorage.clear()
     useEditorStore.setState({ document: createEmptyDocument('Export Target Test') })
   })
