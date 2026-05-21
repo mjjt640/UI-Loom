@@ -280,7 +280,9 @@ function ResourceLibraryPanel({
   const [loadState, setLoadState] = useState<'error' | 'loading' | 'ready'>(
     'loading',
   )
+  const [loadAttempt, setLoadAttempt] = useState(0)
   const normalizedQuery = query.trim().toLowerCase()
+
   useEffect(() => {
     let mounted = true
 
@@ -301,7 +303,14 @@ function ResourceLibraryPanel({
     return () => {
       mounted = false
     }
-  }, [])
+  }, [loadAttempt])
+
+  const retryLoad = () => {
+    setIcons([])
+    setLoadState('loading')
+    setLoadAttempt((attempt) => attempt + 1)
+  }
+
   const visibleIcons = useMemo(
     () =>
       icons.filter((icon) => {
@@ -385,7 +394,14 @@ function ResourceLibraryPanel({
               className="rounded-lg border border-red-200 bg-red-50 px-3 py-4 text-sm text-red-700"
               role="alert"
             >
-              资源加载失败，请稍后重试。
+              <p>资源加载失败，请稍后重试。</p>
+              <button
+                className="mt-3 rounded-md border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:border-red-300 hover:bg-red-100"
+                onClick={retryLoad}
+                type="button"
+              >
+                重试
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-x-4 gap-y-5">

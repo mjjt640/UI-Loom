@@ -435,6 +435,42 @@ describe('jsdesign inspired editor shell', () => {
     )
   })
 
+  it('retries remix icon resource loading after a failure', async () => {
+    const user = userEvent.setup()
+    let resolveRetry: (response: Response) => void = () => undefined
+    const retryResponse = new Promise<Response>((resolve) => {
+      resolveRetry = resolve
+    })
+
+    vi.mocked(globalThis.fetch)
+      .mockRejectedValueOnce(new Error('network unavailable'))
+      .mockReturnValueOnce(retryResponse)
+
+    render(<EditorScreen />)
+    await user.click(screen.getByRole('tab', { name: '资源' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      '资源加载失败，请稍后重试。',
+    )
+
+    await user.click(screen.getByRole('button', { name: '重试' }))
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '正在加载 Remix 图标...',
+    )
+
+    resolveRetry(
+      new Response(JSON.stringify(remixIconFixture), {
+        headers: { 'Content-Type': 'application/json' },
+        status: 200,
+      }),
+    )
+
+    expect(await screen.findByRole('button', { name: 'align-right' }))
+      .toBeInTheDocument()
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2)
+  })
+
   it('selects the slice tool from the dedicated sidebar icon', async () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
