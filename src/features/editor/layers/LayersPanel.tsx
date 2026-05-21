@@ -84,6 +84,32 @@ const componentPresets: ComponentPreset[] = [
   },
 ]
 
+const remixIconCategoryLabels: Record<string, string> = {
+  Arrows: '箭头',
+  Buildings: '建筑',
+  Business: '商务',
+  Communication: '沟通',
+  Design: '设计',
+  Development: '开发',
+  Device: '设备',
+  Document: '文档',
+  Editor: '编辑',
+  Finance: '金融',
+  Food: '餐饮',
+  Health: '健康',
+  Logos: '品牌',
+  Map: '地图',
+  Media: '媒体',
+  Others: '其他',
+  System: '系统',
+  'User & Faces': '用户与头像',
+  Weather: '天气',
+}
+
+function remixIconCategoryLabel(category: string) {
+  return remixIconCategoryLabels[category] ?? category
+}
+
 function layerDisplayName(node: UINode) {
   const defaultNames: Record<string, string> = {
     Button: 'Button',
@@ -281,6 +307,7 @@ function ResourceLibraryPanel({
     'loading',
   )
   const [loadAttempt, setLoadAttempt] = useState(0)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const normalizedQuery = query.trim().toLowerCase()
 
   useEffect(() => {
@@ -308,12 +335,31 @@ function ResourceLibraryPanel({
   const retryLoad = () => {
     setIcons([])
     setLoadState('loading')
+    setSelectedCategory(null)
     setLoadAttempt((attempt) => attempt + 1)
   }
+
+  const categoryOptions = useMemo(() => {
+    const counts = new Map<string, number>()
+
+    icons.forEach((icon) => {
+      counts.set(icon.category, (counts.get(icon.category) ?? 0) + 1)
+    })
+
+    return [...counts.entries()].map(([name, count]) => ({
+      count,
+      label: remixIconCategoryLabel(name),
+      name,
+    }))
+  }, [icons])
 
   const visibleIcons = useMemo(
     () =>
       icons.filter((icon) => {
+        if (selectedCategory !== null && icon.category !== selectedCategory) {
+          return false
+        }
+
         if (!normalizedQuery) {
           return true
         }
@@ -323,7 +369,7 @@ function ResourceLibraryPanel({
           .toLowerCase()
           .includes(normalizedQuery)
       }),
-    [icons, normalizedQuery],
+    [icons, normalizedQuery, selectedCategory],
   )
 
   return (
@@ -370,17 +416,52 @@ function ResourceLibraryPanel({
           </span>
         </h2>
       </div>
+      {loadState === 'ready' ? (
+        <div className="mt-4 space-y-2">
+          <p className="text-xs font-semibold text-[#8a94a6]">分类</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              aria-pressed={selectedCategory === null}
+              className={
+                selectedCategory === null
+                  ? 'rounded-full bg-[#1677ff] px-3 py-1.5 text-xs font-semibold text-white'
+                  : 'rounded-full border border-[#d9dde5] bg-white px-3 py-1.5 text-xs font-semibold text-[#4b5563] hover:border-[#1677ff] hover:text-[#1677ff]'
+              }
+              onClick={() => setSelectedCategory(null)}
+              type="button"
+            >
+              全部 {icons.length}
+            </button>
+            {categoryOptions.map((category) => (
+              <button
+                aria-pressed={selectedCategory === category.name}
+                className={
+                  selectedCategory === category.name
+                    ? 'rounded-full bg-[#1677ff] px-3 py-1.5 text-xs font-semibold text-white'
+                    : 'rounded-full border border-[#d9dde5] bg-white px-3 py-1.5 text-xs font-semibold text-[#4b5563] hover:border-[#1677ff] hover:text-[#1677ff]'
+                }
+                key={category.name}
+                onClick={() => setSelectedCategory(category.name)}
+                type="button"
+              >
+                {category.label} {category.count}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
       <div className="mt-5 space-y-4">
         <section>
           <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#1f2329]">
-            <span className="text-xs text-[#8a94a6]">▸</span>
-            <span>办公</span>
-          </div>
-        </section>
-        <section>
-          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#1f2329]">
             <span className="text-xs">▾</span>
-            <span>编辑</span>
+            <span>
+              {selectedCategory === null
+                ? '全部图标'
+                : remixIconCategoryLabel(selectedCategory)}
+            </span>
+            <span className="text-xs font-normal text-[#8a94a6]">
+              ({visibleIcons.length})
+            </span>
           </div>
           {loadState === 'loading' ? (
             <div

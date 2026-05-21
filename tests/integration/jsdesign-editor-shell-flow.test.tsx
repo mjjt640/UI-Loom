@@ -42,6 +42,14 @@ const remixIconFixture = [
     tags: ['attachment', 'editor'],
     viewBox: '0 0 24 24',
   },
+  {
+    category: 'Business',
+    name: 'briefcase',
+    source: 'Remix Icon',
+    svgPath: 'M4 5h16v2H4z',
+    tags: ['briefcase', 'business'],
+    viewBox: '0 0 24 24',
+  },
 ] satisfies Array<{
   category: string
   name: string
@@ -391,6 +399,32 @@ describe('jsdesign inspired editor shell', () => {
     expect(screen.getByLabelText('align-right 图标')).toBeInTheDocument()
     expect(screen.getByRole('listitem', { name: 'align-right' }))
       .toBeInTheDocument()
+  })
+
+  it('filters remix icon resources by category', async () => {
+    const user = userEvent.setup()
+    render(<EditorScreen />)
+
+    await user.click(screen.getByRole('tab', { name: '资源' }))
+    expect(await screen.findByRole('button', { name: 'align-right' }))
+      .toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'briefcase' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '商务 1' }))
+
+    expect(screen.getByRole('button', { name: '商务 1' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('button', { name: 'briefcase' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'align-right' }))
+      .not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '全部 4' }))
+
+    expect(screen.getByRole('button', { name: 'align-right' }))
+      .toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'briefcase' })).toBeInTheDocument()
   })
 
   it('shows an empty state when remix icon search has no matches', async () => {
