@@ -403,6 +403,13 @@ function ResourceLibraryPanel({
                 重试
               </button>
             </div>
+          ) : visibleIcons.length === 0 ? (
+            <div
+              className="rounded-lg border border-[#d9dde5] bg-white px-3 py-4 text-sm text-[#6b7280]"
+              role="status"
+            >
+              没有找到匹配的图标。
+            </div>
           ) : (
             <div className="grid grid-cols-2 gap-x-4 gap-y-5">
               {visibleIcons.map((icon) => (

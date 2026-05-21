@@ -393,6 +393,21 @@ describe('jsdesign inspired editor shell', () => {
       .toBeInTheDocument()
   })
 
+  it('shows an empty state when remix icon search has no matches', async () => {
+    const user = userEvent.setup()
+    render(<EditorScreen />)
+
+    await user.click(screen.getByRole('tab', { name: '资源' }))
+    expect(await screen.findByRole('button', { name: 'align-right' }))
+      .toBeInTheDocument()
+
+    await user.type(screen.getByRole('searchbox', { name: '搜索资源' }), 'unknown')
+
+    expect(screen.queryByRole('button', { name: 'align-right' }))
+      .not.toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('没有找到匹配的图标。')
+  })
+
   it('loads remix icon resources only when the resource panel is opened', async () => {
     const user = userEvent.setup()
 
