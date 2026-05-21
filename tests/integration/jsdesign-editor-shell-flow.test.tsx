@@ -427,6 +427,68 @@ describe('jsdesign inspired editor shell', () => {
     expect(screen.getByRole('button', { name: 'briefcase' })).toBeInTheDocument()
   })
 
+  it('shows resource filter summary counts and clears active filters', async () => {
+    const user = userEvent.setup()
+    render(<EditorScreen />)
+
+    await user.click(screen.getByRole('tab', { name: '资源' }))
+    expect(await screen.findByRole('button', { name: 'align-right' }))
+      .toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '商务 1' }))
+    await user.type(screen.getByRole('searchbox', { name: '搜索资源' }), 'brief')
+
+    expect(screen.getByText('显示 1 / 4 个图标')).toBeInTheDocument()
+    expect(screen.getByText('当前筛选：分类 商务 · 关键词 brief'))
+      .toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'briefcase' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'align-right' }))
+      .not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '清除搜索' }))
+
+    expect(screen.getByRole('searchbox', { name: '搜索资源' })).toHaveValue('')
+    expect(screen.getByText('当前筛选：分类 商务')).toBeInTheDocument()
+    expect(screen.getByText('显示 1 / 4 个图标')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '清除筛选' }))
+
+    expect(screen.getByRole('button', { name: '全部 4' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByText('当前筛选：全部图标')).toBeInTheDocument()
+    expect(screen.getByText('显示 4 / 4 个图标')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'align-right' }))
+      .toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'briefcase' })).toBeInTheDocument()
+  })
+
+  it('clears a no-match resource search without changing the category filter', async () => {
+    const user = userEvent.setup()
+    render(<EditorScreen />)
+
+    await user.click(screen.getByRole('tab', { name: '资源' }))
+    expect(await screen.findByRole('button', { name: 'briefcase' }))
+      .toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '商务 1' }))
+    await user.type(screen.getByRole('searchbox', { name: '搜索资源' }), 'unknown')
+
+    expect(screen.getByRole('status')).toHaveTextContent('没有找到匹配的图标。')
+    expect(screen.getByText('当前筛选：分类 商务 · 关键词 unknown'))
+      .toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '清除搜索' }))
+
+    expect(screen.getByRole('button', { name: '商务 1' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByText('当前筛选：分类 商务')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'briefcase' })).toBeInTheDocument()
+  })
+
   it('shows an empty state when remix icon search has no matches', async () => {
     const user = userEvent.setup()
     render(<EditorScreen />)

@@ -371,6 +371,29 @@ function ResourceLibraryPanel({
       }),
     [icons, normalizedQuery, selectedCategory],
   )
+  const selectedCategoryLabel =
+    selectedCategory === null
+      ? '全部图标'
+      : remixIconCategoryLabel(selectedCategory)
+  const filterSummaryParts =
+    selectedCategory === null
+      ? ['全部图标']
+      : [`分类 ${selectedCategoryLabel}`]
+  const trimmedQuery = query.trim()
+  const hasQuery = trimmedQuery.length > 0
+
+  if (hasQuery) {
+    filterSummaryParts.push(`关键词 ${trimmedQuery}`)
+  }
+
+  const clearSearch = () => {
+    setQuery('')
+  }
+
+  const clearFilters = () => {
+    setQuery('')
+    setSelectedCategory(null)
+  }
 
   return (
     <div className="h-full overflow-y-auto bg-[#fbfcfe] px-3 py-3">
@@ -448,17 +471,45 @@ function ResourceLibraryPanel({
               </button>
             ))}
           </div>
+          <div className="rounded-lg border border-[#d9dde5] bg-white px-3 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 space-y-1">
+                <p className="text-xs font-semibold text-[#1f2329]">
+                  显示 {visibleIcons.length} / {icons.length} 个图标
+                </p>
+                <p className="text-xs text-[#6b7280]">
+                  当前筛选：{filterSummaryParts.join(' · ')}
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-wrap justify-end gap-2">
+                {hasQuery ? (
+                  <button
+                    className="rounded-md border border-[#d9dde5] bg-white px-2 py-1 text-xs font-semibold text-[#4b5563] hover:border-[#1677ff] hover:text-[#1677ff]"
+                    onClick={clearSearch}
+                    type="button"
+                  >
+                    清除搜索
+                  </button>
+                ) : null}
+                {selectedCategory !== null || hasQuery ? (
+                  <button
+                    className="rounded-md bg-[#edf4ff] px-2 py-1 text-xs font-semibold text-[#1677ff] hover:bg-[#dfefff]"
+                    onClick={clearFilters}
+                    type="button"
+                  >
+                    清除筛选
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          </div>
         </div>
       ) : null}
       <div className="mt-5 space-y-4">
         <section>
           <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#1f2329]">
             <span className="text-xs">▾</span>
-            <span>
-              {selectedCategory === null
-                ? '全部图标'
-                : remixIconCategoryLabel(selectedCategory)}
-            </span>
+            <span>{selectedCategoryLabel}</span>
             <span className="text-xs font-normal text-[#8a94a6]">
               ({visibleIcons.length})
             </span>
