@@ -38,6 +38,10 @@ interface InputNodeCreationOptions extends NodeCreationOptions {
   placeholder: string
 }
 
+interface ElementPlusNodeCreationOptions extends NodeCreationOptions {
+  component: 'button' | 'input' | 'card' | 'table'
+}
+
 type AlignableNode = UINode & {
   layout: UINode['layout'] & {
     width: number
@@ -388,6 +392,75 @@ export function createListNode({ layout }: NodeCreationOptions): UINode {
       text: 'Dashboard\nSettings\nBilling',
     },
     meta: { componentHint: 'shadcn-list' },
+  }
+}
+
+export function createElementPlusNode({
+  component,
+  layout,
+}: ElementPlusNodeCreationOptions): UINode {
+  if (component === 'button') {
+    return {
+      ...createButtonNode({ layout, text: '保存' }),
+      name: 'Element Plus 按钮',
+      meta: { componentHint: 'element-plus-button' },
+      style: {
+        background: '#409eff',
+        color: '#ffffff',
+        radius: 4,
+        fontSize: 14,
+        fontWeight: 500,
+      },
+    }
+  }
+
+  if (component === 'input') {
+    return {
+      ...createInputNode({ layout, placeholder: '请输入内容' }),
+      name: 'Element Plus 输入框',
+      meta: { componentHint: 'element-plus-input' },
+      style: {
+        background: '#ffffff',
+        color: '#303133',
+        radius: 4,
+        borderWidth: 1,
+        borderColor: '#dcdfe6',
+        fontSize: 14,
+      },
+    }
+  }
+
+  if (component === 'card') {
+    return {
+      ...createCardNode({ layout }),
+      name: 'Element Plus 卡片',
+      content: {
+        text: '卡片标题\nElement Plus 内容区域',
+      },
+      meta: { componentHint: 'element-plus-card' },
+      style: {
+        background: '#ffffff',
+        radius: 4,
+        borderWidth: 1,
+        borderColor: '#e4e7ed',
+        shadow: '0 2px 12px rgba(0, 0, 0, 0.06)',
+      },
+    }
+  }
+
+  return {
+    ...createListNode({ layout }),
+    name: 'Element Plus 表格',
+    content: {
+      text: '姓名\n角色\n状态',
+    },
+    meta: { componentHint: 'element-plus-table' },
+    style: {
+      background: '#ffffff',
+      radius: 4,
+      borderWidth: 1,
+      borderColor: '#ebeef5',
+    },
   }
 }
 

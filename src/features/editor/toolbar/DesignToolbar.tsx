@@ -60,6 +60,10 @@ function activeToolFromMode(toolMode: EditorToolMode): ActiveTool {
     toolMode === 'component-card' ||
     toolMode === 'component-input' ||
     toolMode === 'component-list' ||
+    toolMode === 'element-plus-button' ||
+    toolMode === 'element-plus-input' ||
+    toolMode === 'element-plus-card' ||
+    toolMode === 'element-plus-table' ||
     toolMode === 'resource-icon' ||
     toolMode === 'container' ||
     toolMode === 'frame'

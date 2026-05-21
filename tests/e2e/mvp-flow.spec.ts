@@ -32,6 +32,7 @@ async function addImage(page: import('@playwright/test').Page) {
 
 test('user can add text and see exported code', async ({ page }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: '选择 React + Tailwind' }).click()
   await page.getByRole('button', { name: '文本工具' }).click()
   await dragOnCanvas(page, { endX: 160, endY: 32, startX: 0, startY: 0 })
   await expect(page.getByRole('button', { name: '新文本' })).toBeVisible()
@@ -42,6 +43,7 @@ test('user can add basic nodes, edit image alt, and delete a node', async ({
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: '选择 React + Tailwind' }).click()
   await addButton(page)
   await addImage(page)
   await addContainer(page)
@@ -65,6 +67,7 @@ test('user can add basic nodes, edit image alt, and delete a node', async ({
 
 test('user can move a node into a flex container', async ({ page }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: '选择 React + Tailwind' }).click()
   await addContainer(page)
   await addButton(page)
   await page.getByRole('button', { name: '按钮', exact: true }).click()

@@ -102,6 +102,10 @@ function layoutSizeStyle(node: UINode) {
 }
 
 function nodeAriaLabel(node: UINode) {
+  if (node.meta.componentHint?.startsWith('element-plus-')) {
+    return `${node.name}组件`
+  }
+
   if (node.type === 'card') return 'Card 组件'
   if (node.type === 'input') return 'Input 组件'
   if (node.type === 'list') return 'List 组件'
@@ -413,6 +417,11 @@ export function CanvasNode({
   if (node.type === 'button') {
     return (
       <button
+        aria-label={
+          node.meta.componentHint?.startsWith('element-plus-')
+            ? nodeAriaLabel(node)
+            : undefined
+        }
         className={selectionClass}
         onClick={selectCurrentNode}
         onPointerDown={startDrag}

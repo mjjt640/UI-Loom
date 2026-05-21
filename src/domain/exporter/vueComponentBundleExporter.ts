@@ -109,6 +109,154 @@ function renderGeneratedPage(document: PageDocument, boundaries: VueComponentBou
   ].join('\n')
 }
 
+function escapeHtml(value = '') {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+}
+
+function escapeVueAttribute(value = '') {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+}
+
+function elementPlusLines(node: HtmlRenderableNode) {
+  const text = node.content.text ?? ''
+
+  if (node.meta.componentHint === 'element-plus-button') {
+    return [`<el-button type="primary">${escapeVueAttribute(text)}</el-button>`]
+  }
+
+  if (node.meta.componentHint === 'element-plus-input') {
+    return [
+      `<el-input placeholder="${escapeVueAttribute(
+        node.content.placeholder,
+      )}" aria-label="${escapeVueAttribute(node.name)}" />`,
+    ]
+  }
+
+  if (node.meta.componentHint === 'element-plus-card') {
+    const [header = node.name, ...bodyLines] = text.split('\n')
+    const body = bodyLines.join('\n').trim()
+
+    return [
+      `<el-card aria-label="${escapeVueAttribute(node.name)}">`,
+      `  <template #header>${escapeVueAttribute(header)}</template>`,
+      `  <p>${escapeVueAttribute(body)}</p>`,
+      '</el-card>',
+    ]
+  }
+
+  if (node.meta.componentHint === 'element-plus-table') {
+    return [
+      '<el-table :data="tableData" style="width: 100%">',
+      '  <el-table-column prop="name" label="姓名" />',
+      '  <el-table-column prop="role" label="角色" />',
+      '  <el-table-column prop="status" label="状态" />',
+      '</el-table>',
+    ]
+  }
+
+  return null
+}
+
+function renderElementPlusNode(node: HtmlRenderableNode) {
+  const lines = elementPlusLines(node)
+
+  return lines?.join('\n') ?? null
+}
+
+function replaceRenderedNode(
+  content: string,
+  node: HtmlRenderableNode,
+  replacement: string,
+) {
+  const escapedNodeId = node.id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const nodePattern = new RegExp(
+    `<([a-z]+)\\b[^>]*data-ui-node-id="${escapedNodeId}"[^>]*(?:>[\\s\\S]*?<\\/\\1>|\\s\\/>)`,
+  )
+
+  return content.replace(nodePattern, replacement)
+}
+
+function replaceRootElementPlusNodes(content: string, nodes: HtmlRenderableNode[]) {
+  return nodes.reduce((currentContent, node) => {
+    const renderedElementPlus = renderElementPlusNode(node)
+
+    if (!renderedElementPlus) {
+      return currentContent
+    }
+
+    return replaceRenderedNode(currentContent, node, renderedElementPlus)
+  }, content)
+}
+
+function replaceElementPlusNodesInSubtree(
+  document: PageDocument,
+  content: string,
+  node: HtmlRenderableNode,
+): string {
+  const childNodes = node.children
+    .map((childId) => document.nodes[childId])
+    .filter((childNode): childNode is HtmlRenderableNode =>
+      childNode ? isHtmlRenderableNode(childNode) : false,
+    )
+
+  return childNodes.reduce((currentContent, childNode) => {
+    const replacedChildrenContent = replaceElementPlusNodesInSubtree(
+      document,
+      currentContent,
+      childNode,
+    )
+    const renderedElementPlus = renderElementPlusNode(childNode)
+
+    if (!renderedElementPlus) {
+      return replacedChildrenContent
+    }
+
+    return replaceRenderedNode(
+      replacedChildrenContent,
+      childNode,
+      renderedElementPlus,
+    )
+  }, content)
+}
+
+function hasElementPlusTable(document: PageDocument) {
+  return Object.values(document.nodes).some(
+    (node) => node.meta.componentHint === 'element-plus-table',
+  )
+}
+
+function tableDataScript(document: PageDocument) {
+  if (!hasElementPlusTable(document)) {
+    return []
+  }
+
+  const tableNode = Object.values(document.nodes).find(
+    (node) => node.meta.componentHint === 'element-plus-table',
+  )
+  const labels = (tableNode?.content.text ?? '姓名\n角色\n状态')
+    .split('\n')
+    .map((value) => value.trim())
+    .filter(Boolean)
+  const [name = '姓名', role = '角色', status = '状态'] = labels
+
+  return [
+    'const tableData = [',
+    `  { name: '${escapeHtml(name)}', role: '${escapeHtml(
+      role,
+    )}', status: '${escapeHtml(status)}' },`,
+    ']',
+  ]
+}
+
 function renderComponentStyle(document: PageDocument, node: HtmlRenderableNode) {
   return renderCssRule(document, node, true).join('\n\n')
 }
@@ -135,6 +283,7 @@ function renderComponentFile(document: PageDocument, boundary: VueComponentBound
     '',
     '<script setup lang="ts">',
     `const componentName = '${boundary.componentName}'`,
+    ...tableDataScript(componentDocument),
     '</script>',
     '',
     '<style scoped>',
@@ -153,6 +302,19 @@ function vueReadme(boundaries: VueComponentBoundary[]) {
     '',
     '把 `GeneratedPage.vue` 和 `components/` 放入 Vue 3 项目中使用。',
     '',
+    '如果导出内容包含 Element Plus 组件，请在目标项目安装并注册 Element Plus：',
+    '',
+    '```bash',
+    'pnpm add element-plus',
+    '```',
+    '',
+    '```ts',
+    "import ElementPlus from 'element-plus'",
+    "import 'element-plus/dist/index.css'",
+    '',
+    'app.use(ElementPlus)',
+    '```',
+    '',
     '导出的 `width: 100%`、`height: auto`、`min-width`、`max-width` 和约束定位来自设计节点的响应式布局语义。',
     '',
     '组件文件:',
@@ -164,12 +326,17 @@ function vueReadme(boundaries: VueComponentBoundary[]) {
 
 export function exportToVueComponentBundle(document: PageDocument): ExportBundle {
   const boundaries = componentBoundaries(document)
+  const rootNodes = visibleRootNodes(document)
   const boundaryIds = new Set(boundaries.map((boundary) => boundary.node.id))
   const componentFiles: GeneratedFile[] = boundaries.map((boundary) => ({
-    path: `components/${boundary.fileName}.vue`,
-    language: 'vue',
-    content: renderComponentFile(document, boundary),
-  }))
+        path: `components/${boundary.fileName}.vue`,
+        language: 'vue',
+        content: replaceElementPlusNodesInSubtree(
+          document,
+          renderComponentFile(document, boundary),
+          boundary.node,
+        ),
+      }))
   const pageMappings = visibleRootNodes(document)
     .filter((node) => !boundaryIds.has(node.id))
     .flatMap((node) => mappingsForSubtree(document, node, 'GeneratedPage.vue'))
@@ -187,7 +354,13 @@ export function exportToVueComponentBundle(document: PageDocument): ExportBundle
       {
         path: 'GeneratedPage.vue',
         language: 'vue',
-        content: renderGeneratedPage(document, boundaries),
+        content: replaceRootElementPlusNodes(
+          renderGeneratedPage(document, boundaries).replace(
+            '</script>',
+            [...tableDataScript(document), '</script>'].join('\n'),
+          ),
+          rootNodes.filter((node) => !boundaryIds.has(node.id)),
+        ),
       },
       ...componentFiles,
       {

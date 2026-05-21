@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useEditorStore } from '../../../store/editorStore'
+import type { ExportTargetId } from '../../../domain/exporter/exportTypes'
 import type { UINode } from '../../../domain/model/types'
 import {
   loadRemixLinearIcons,
@@ -11,6 +12,7 @@ type SidePanel = 'artboard' | 'components' | 'layers' | 'resources'
 
 interface LayersPanelProps {
   activePanel: SidePanel
+  exportTargetId: ExportTargetId
   onPanelChange: (panel: SidePanel) => void
   onResourceIconSelect: (icon: RemixIconResource) => void
   onToolModeChange: (toolMode: EditorToolMode) => void
@@ -24,6 +26,18 @@ interface ComponentPreset {
     'component-card' | 'component-input' | 'component-list'
   >
   source: string
+}
+
+interface ElementPlusPreset {
+  description: string
+  label: string
+  mode: Extract<
+    EditorToolMode,
+    | 'element-plus-button'
+    | 'element-plus-input'
+    | 'element-plus-card'
+    | 'element-plus-table'
+  >
 }
 
 const canvasPresetGroups = [
@@ -81,6 +95,29 @@ const componentPresets: ComponentPreset[] = [
     label: 'List',
     mode: 'component-list',
     source: 'shadcn/ui',
+  },
+]
+
+const elementPlusPresets: ElementPlusPreset[] = [
+  {
+    description: '主按钮、确认操作、表单提交',
+    label: '按钮',
+    mode: 'element-plus-button',
+  },
+  {
+    description: '表单录入、搜索、筛选条件',
+    label: '输入框',
+    mode: 'element-plus-input',
+  },
+  {
+    description: '信息面板、概览卡片、详情容器',
+    label: '卡片',
+    mode: 'element-plus-card',
+  },
+  {
+    description: '数据列表、后台表格、管理页面',
+    label: '表格',
+    mode: 'element-plus-table',
   },
 ]
 
@@ -170,10 +207,14 @@ function layerDisplayName(node: UINode) {
 }
 
 function ComponentLibraryPanel({
+  exportTargetId,
   onToolModeChange,
 }: {
+  exportTargetId: ExportTargetId
   onToolModeChange: (toolMode: EditorToolMode) => void
 }) {
+  const canUseElementPlus = exportTargetId === 'vue3-sfc'
+
   return (
     <div className="h-full overflow-y-auto bg-[#fbfcfe]">
       <div className="border-b border-[#e7ebf2] px-4 py-3">
@@ -182,10 +223,19 @@ function ComponentLibraryPanel({
           开源组件库
         </h2>
         <p className="mt-1 text-xs text-[#6b7280]">
-          第一批接入 shadcn/ui 风格预设，选择后在画布拖拽放置。
+          按项目导出格式解锁对应组件库，选择后在画布拖拽放置。
         </p>
       </div>
       <div className="space-y-3 p-4">
+        <section className="space-y-3">
+          <div>
+            <h3 className="text-xs font-semibold text-[#1f2329]">
+              React 组件
+            </h3>
+            <p className="mt-1 text-xs text-[#8a94a6]">
+              适用于 React + Tailwind 导出。
+            </p>
+          </div>
         {componentPresets.map((preset) => (
           <button
             aria-label={`选择 ${preset.label} 组件`}
@@ -207,6 +257,58 @@ function ComponentLibraryPanel({
             </p>
           </button>
         ))}
+        </section>
+        <section className="space-y-3 border-t border-[#e7ebf2] pt-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-xs font-semibold text-[#1f2329]">
+                Element Plus
+              </h3>
+              <p className="mt-1 text-xs text-[#8a94a6]">
+                适用于 Vue 3 SFC 导出。
+              </p>
+            </div>
+            <span
+              className={
+                canUseElementPlus
+                  ? 'rounded-full bg-[#edf4ff] px-2 py-0.5 text-xs font-medium text-[#1677ff]'
+                  : 'rounded-full bg-[#f3f4f6] px-2 py-0.5 text-xs font-medium text-[#8a94a6]'
+              }
+            >
+              {canUseElementPlus ? '已解锁' : '未解锁'}
+            </span>
+          </div>
+          {canUseElementPlus ? (
+            elementPlusPresets.map((preset) => (
+              <button
+                aria-label={`选择 Element Plus ${preset.label}`}
+                className="w-full rounded-[14px] border border-[#dfe4ec] bg-white p-3 text-left shadow-[0_8px_22px_rgba(15,23,42,0.04)] transition hover:border-[#1677ff] hover:shadow-[0_14px_30px_rgba(22,119,255,0.12)]"
+                key={preset.mode}
+                onClick={() => onToolModeChange(preset.mode)}
+                type="button"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-[#1f2329]">
+                    {preset.label}
+                  </span>
+                  <span className="rounded-full bg-[#ecfdf3] px-2 py-0.5 text-xs font-medium text-[#15803d]">
+                    Element Plus
+                  </span>
+                </div>
+                <p className="mt-2 text-xs leading-5 text-[#6b7280]">
+                  {preset.description}
+                </p>
+              </button>
+            ))
+          ) : (
+            <div
+              className="rounded-[14px] border border-dashed border-[#d9dde5] bg-[#f8fafc] p-3 text-xs leading-5 text-[#6b7280]"
+              role="note"
+            >
+              Element Plus 需要 Vue 3 SFC 导出格式。
+            </div>
+          )}
+        </section>
       </div>
     </div>
   )
@@ -791,6 +893,7 @@ function panelTabClass(selected: boolean) {
 
 export function LayersPanel({
   activePanel,
+  exportTargetId,
   onPanelChange,
   onResourceIconSelect,
   onToolModeChange,
@@ -845,7 +948,10 @@ export function LayersPanel({
       {activePanel === 'artboard' ? (
         <ArtboardPresetPanel />
       ) : activePanel === 'components' ? (
-        <ComponentLibraryPanel onToolModeChange={onToolModeChange} />
+        <ComponentLibraryPanel
+          exportTargetId={exportTargetId}
+          onToolModeChange={onToolModeChange}
+        />
       ) : activePanel === 'resources' ? (
         <ResourceLibraryPanel onResourceIconSelect={onResourceIconSelect} />
       ) : (

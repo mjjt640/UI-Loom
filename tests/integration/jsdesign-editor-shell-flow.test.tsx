@@ -325,6 +325,7 @@ describe('jsdesign inspired editor shell', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
+    await user.click(screen.getByRole('button', { name: '选择 React + Tailwind' }))
     await user.click(screen.getByRole('tab', { name: '组件' }))
 
     expect(screen.getByRole('tab', { name: '图层' })).toBeInTheDocument()
@@ -356,6 +357,47 @@ describe('jsdesign inspired editor shell', () => {
       top: '96px',
       width: '360px',
       height: '240px',
+    })
+  })
+
+  it('unlocks Element Plus presets only for the Vue 3 export target', async () => {
+    const user = userEvent.setup()
+    render(<EditorScreen />)
+
+    await user.click(screen.getByRole('button', { name: '选择 React + Tailwind' }))
+    await user.click(screen.getByRole('tab', { name: '组件' }))
+
+    expect(screen.getByRole('heading', { name: '开源组件库' })).toBeInTheDocument()
+    expect(screen.getByText('Element Plus 需要 Vue 3 SFC 导出格式。'))
+      .toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '选择 Element Plus 按钮' }))
+      .not.toBeInTheDocument()
+
+    await user.selectOptions(screen.getByLabelText('导出格式'), 'vue3-sfc')
+
+    expect(screen.getByRole('button', { name: '选择 Element Plus 按钮' }))
+      .toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '选择 Element Plus 输入框' }))
+      .toBeInTheDocument()
+
+    await user.click(
+      screen.getByRole('button', { name: '选择 Element Plus 按钮' }),
+    )
+
+    expect(screen.getByRole('application', { name: '设计画布' })).toHaveAttribute(
+      'data-tool-mode',
+      'element-plus-button',
+    )
+
+    await dragOnCanvas(user, { endX: 248, endY: 136, startX: 96, startY: 88 })
+
+    expect(screen.getByRole('listitem', { name: 'Element Plus 按钮' }))
+      .toBeInTheDocument()
+    expect(screen.getByLabelText('Element Plus 按钮组件')).toHaveStyle({
+      left: '96px',
+      top: '88px',
+      width: '152px',
+      height: '48px',
     })
   })
 

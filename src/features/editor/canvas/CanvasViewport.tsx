@@ -4,6 +4,7 @@ import {
   createCardNode,
   createContainerNode,
   createEllipseNode,
+  createElementPlusNode,
   createFrameNode,
   createIconNode,
   createImageNode,
@@ -198,6 +199,10 @@ function isInsertionTool(toolMode: EditorToolMode) {
     toolMode === 'component-card' ||
     toolMode === 'component-input' ||
     toolMode === 'component-list' ||
+    toolMode === 'element-plus-button' ||
+    toolMode === 'element-plus-input' ||
+    toolMode === 'element-plus-card' ||
+    toolMode === 'element-plus-table' ||
     toolMode === 'resource-icon' ||
     isDrawingTool(toolMode)
   )
@@ -249,6 +254,18 @@ function createNodeForTool(
   }
   if (toolMode === 'component-list') {
     return createListNode({ layout })
+  }
+  if (toolMode === 'element-plus-button') {
+    return createElementPlusNode({ component: 'button', layout })
+  }
+  if (toolMode === 'element-plus-input') {
+    return createElementPlusNode({ component: 'input', layout })
+  }
+  if (toolMode === 'element-plus-card') {
+    return createElementPlusNode({ component: 'card', layout })
+  }
+  if (toolMode === 'element-plus-table') {
+    return createElementPlusNode({ component: 'table', layout })
   }
   if (toolMode === 'resource-icon') {
     if (!resourceIcon) {

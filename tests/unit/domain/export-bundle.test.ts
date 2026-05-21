@@ -8,6 +8,7 @@ import { exportTargets } from '../../../src/domain/exporter/exportRegistry'
 import { exportToSingleFileHtmlBundle } from '../../../src/domain/exporter/singleFileHtmlExporter'
 import { exportToVue3Bundle } from '../../../src/domain/exporter/vue3Exporter'
 import { createEmptyDocument } from '../../../src/domain/model/factories'
+import type { UINode } from '../../../src/domain/model/types'
 import { testButtonNode, testFrameNode } from './nodeTestFactories'
 
 describe('export bundle architecture', () => {
@@ -92,6 +93,78 @@ describe('export bundle architecture', () => {
     expect(bundle.files[0].content).toContain('<template>')
     expect(bundle.files[0].content).toContain('<script setup')
     expect(bundle.files[0].content).toContain('保存')
+  })
+
+  it('exports Element Plus hinted nodes as Vue component tags', () => {
+    const document = createEmptyDocument('Element Plus Vue Test')
+    const elementPlusButton: UINode = {
+      ...testButtonNode('保存'),
+      name: 'Element Plus 按钮',
+      meta: { componentHint: 'element-plus-button' },
+    }
+    const elementPlusInput: UINode = {
+      ...testButtonNode(''),
+      type: 'input',
+      name: 'Element Plus 输入框',
+      content: { placeholder: '请输入邮箱' },
+      meta: { componentHint: 'element-plus-input' },
+    }
+    const elementPlusTable: UINode = {
+      ...testButtonNode(''),
+      type: 'list',
+      name: 'Element Plus 表格',
+      content: { text: '姓名\n角色\n状态' },
+      meta: { componentHint: 'element-plus-table' },
+    }
+    const withButton = insertChildNode(
+      document,
+      document.rootNodeId,
+      elementPlusButton,
+    )
+    const next = insertChildNode(
+      withButton,
+      withButton.rootNodeId,
+      elementPlusInput,
+    )
+    const withTable = insertChildNode(
+      next,
+      next.rootNodeId,
+      elementPlusTable,
+    )
+    const bundle = exportToVue3Bundle(withTable)
+    const page = bundle.files.find((file) => file.path === 'GeneratedPage.vue')
+    const readme = bundle.files.find((file) => file.path === 'README.md')
+
+    expect(page?.content).toContain('<el-button')
+    expect(page?.content).toContain('type="primary"')
+    expect(page?.content).toContain('>保存</el-button>')
+    expect(page?.content).toContain(
+      '<el-input placeholder="请输入邮箱" aria-label="Element Plus 输入框" />',
+    )
+    expect(page?.content).toContain('<el-table :data="tableData"')
+    expect(page?.content).toContain('const tableData =')
+    expect(readme?.content).toContain('pnpm add element-plus')
+    expect(readme?.content).toContain("import ElementPlus from 'element-plus'")
+  })
+
+  it('exports nested Element Plus nodes inside Vue component files', () => {
+    const document = createEmptyDocument('Nested Element Plus Vue Test')
+    const frameNode = testFrameNode()
+    const elementPlusButton: UINode = {
+      ...testButtonNode('确认'),
+      name: 'Element Plus 按钮',
+      meta: { componentHint: 'element-plus-button' },
+    }
+    const withFrame = insertChildNode(document, document.rootNodeId, frameNode)
+    const next = insertChildNode(withFrame, frameNode.id, elementPlusButton)
+    const bundle = exportToVue3Bundle(next)
+    const frameFile = bundle.files.find(
+      (file) => file.path === 'components/Frame.vue',
+    )
+
+    expect(frameFile?.content).toContain('<el-button')
+    expect(frameFile?.content).toContain('>确认</el-button>')
+    expect(frameFile?.content).not.toContain('<button')
   })
 
   it('exports frame auto layout semantics across code targets', () => {
