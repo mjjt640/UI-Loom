@@ -277,15 +277,26 @@ function ResourceLibraryPanel({
 }) {
   const [query, setQuery] = useState('')
   const [icons, setIcons] = useState<readonly RemixIconResource[]>([])
+  const [loadState, setLoadState] = useState<'error' | 'loading' | 'ready'>(
+    'loading',
+  )
   const normalizedQuery = query.trim().toLowerCase()
   useEffect(() => {
     let mounted = true
 
-    void loadRemixLinearIcons().then((loadedIcons) => {
-      if (mounted) {
-        setIcons(loadedIcons)
-      }
-    })
+    void loadRemixLinearIcons()
+      .then((loadedIcons) => {
+        if (mounted) {
+          setIcons(loadedIcons)
+          setLoadState('ready')
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIcons([])
+          setLoadState('error')
+        }
+      })
 
     return () => {
       mounted = false
@@ -362,31 +373,47 @@ function ResourceLibraryPanel({
             <span className="text-xs">▾</span>
             <span>编辑</span>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-5">
-            {visibleIcons.map((icon) => (
-              <button
-                aria-label={icon.name}
-                className="group text-left"
-                key={icon.name}
-                onClick={() => onResourceIconSelect(icon)}
-                type="button"
-              >
-                <span className="flex h-[128px] items-center justify-center rounded-sm border border-[#d9dde5] bg-[#e7e7e7] text-[#a3a3a3] transition group-hover:border-[#1677ff] group-hover:bg-[#eef6ff] group-hover:text-[#1677ff]">
-                  <svg
-                    aria-hidden="true"
-                    className="h-7 w-7"
-                    fill="currentColor"
-                    viewBox={icon.viewBox}
-                  >
-                    <path d={icon.svgPath} />
-                  </svg>
-                </span>
-                <span className="mt-1.5 block truncate text-sm text-[#4b5563]">
-                  {icon.name}
-                </span>
-              </button>
-            ))}
-          </div>
+          {loadState === 'loading' ? (
+            <div
+              className="rounded-lg border border-[#d9dde5] bg-white px-3 py-4 text-sm text-[#6b7280]"
+              role="status"
+            >
+              正在加载 Remix 图标...
+            </div>
+          ) : loadState === 'error' ? (
+            <div
+              className="rounded-lg border border-red-200 bg-red-50 px-3 py-4 text-sm text-red-700"
+              role="alert"
+            >
+              资源加载失败，请稍后重试。
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-x-4 gap-y-5">
+              {visibleIcons.map((icon) => (
+                <button
+                  aria-label={icon.name}
+                  className="group text-left"
+                  key={icon.name}
+                  onClick={() => onResourceIconSelect(icon)}
+                  type="button"
+                >
+                  <span className="flex h-[128px] items-center justify-center rounded-sm border border-[#d9dde5] bg-[#e7e7e7] text-[#a3a3a3] transition group-hover:border-[#1677ff] group-hover:bg-[#eef6ff] group-hover:text-[#1677ff]">
+                    <svg
+                      aria-hidden="true"
+                      className="h-7 w-7"
+                      fill="currentColor"
+                      viewBox={icon.viewBox}
+                    >
+                      <path d={icon.svgPath} />
+                    </svg>
+                  </span>
+                  <span className="mt-1.5 block truncate text-sm text-[#4b5563]">
+                    {icon.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </div>

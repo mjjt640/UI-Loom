@@ -407,6 +407,34 @@ describe('jsdesign inspired editor shell', () => {
     expect(globalThis.fetch).toHaveBeenCalledWith('/remix-linear-icons.json')
   })
 
+  it('shows a loading state while remix icon resources are loading', async () => {
+    const user = userEvent.setup()
+    vi.mocked(globalThis.fetch).mockReturnValueOnce(
+      new Promise<Response>(() => undefined),
+    )
+
+    render(<EditorScreen />)
+    await user.click(screen.getByRole('tab', { name: '资源' }))
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '正在加载 Remix 图标...',
+    )
+  })
+
+  it('shows an error state when remix icon resources fail to load', async () => {
+    const user = userEvent.setup()
+    vi.mocked(globalThis.fetch).mockRejectedValueOnce(
+      new Error('network unavailable'),
+    )
+
+    render(<EditorScreen />)
+    await user.click(screen.getByRole('tab', { name: '资源' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      '资源加载失败，请稍后重试。',
+    )
+  })
+
   it('selects the slice tool from the dedicated sidebar icon', async () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
