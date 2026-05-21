@@ -4,6 +4,13 @@ export type NodeType =
   | 'group'
   | 'container'
   | 'rect'
+  | 'ellipse'
+  | 'triangle'
+  | 'star'
+  | 'polygon'
+  | 'path'
+  | 'slice'
+  | 'icon'
   | 'text'
   | 'image'
   | 'button'
@@ -57,11 +64,30 @@ export interface StyleProps {
   opacity?: number
 }
 
+export interface PathNodePoint {
+  anchor: {
+    x: number
+    y: number
+  }
+  inHandle?: {
+    x: number
+    y: number
+  }
+  outHandle?: {
+    x: number
+    y: number
+  }
+}
+
 export interface ContentProps {
   text?: string
   src?: string
   alt?: string
   placeholder?: string
+  pathData?: string
+  pathNodes?: PathNodePoint[]
+  svgPath?: string
+  viewBox?: string
 }
 
 export interface UINode {

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createEmptyDocument } from '../../src/domain/model/factories'
 import { EditorScreen } from '../../src/features/editor/EditorScreen'
 import { useEditorStore } from '../../src/store/editorStore'
+import { addRect } from './editorTestActions'
 
 describe('advanced graphic properties flow', () => {
   beforeEach(() => {
@@ -17,7 +18,7 @@ describe('advanced graphic properties flow', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByText('矩形'))
+    await addRect(user)
     await user.click(screen.getByLabelText('矩形图层'))
     await user.clear(screen.getByLabelText('背景颜色'))
     await user.type(screen.getByLabelText('背景颜色'), '#f97316')

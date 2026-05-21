@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createEmptyDocument } from '../../src/domain/model/factories'
 import { EditorScreen } from '../../src/features/editor/EditorScreen'
 import { useEditorStore } from '../../src/store/editorStore'
+import { addFrame } from './editorTestActions'
 
 describe('responsive layout flow', () => {
   beforeEach(() => {
@@ -17,7 +18,7 @@ describe('responsive layout flow', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByRole('button', { name: 'Frame' }))
+    await addFrame(user)
     await user.click(screen.getByRole('group', { name: 'Frame 节点' }))
     await user.selectOptions(screen.getByLabelText('宽度模式'), 'fill')
     await user.selectOptions(screen.getByLabelText('高度模式'), 'hug')

@@ -12,6 +12,17 @@ const constraintsSchema = z.object({
   vertical: z.enum(['top', 'center', 'bottom', 'stretch']).optional(),
 })
 
+const pointSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+})
+
+const pathNodePointSchema = z.object({
+  anchor: pointSchema,
+  inHandle: pointSchema.optional(),
+  outHandle: pointSchema.optional(),
+})
+
 export const nodeSchema = z.object({
   id: z.string(),
   type: z.enum([
@@ -20,6 +31,13 @@ export const nodeSchema = z.object({
     'group',
     'container',
     'rect',
+    'ellipse',
+    'triangle',
+    'star',
+    'polygon',
+    'path',
+    'slice',
+    'icon',
     'text',
     'image',
     'button',
@@ -62,6 +80,10 @@ export const nodeSchema = z.object({
     src: z.string().optional(),
     alt: z.string().optional(),
     placeholder: z.string().optional(),
+    pathData: z.string().optional(),
+    pathNodes: z.array(pathNodePointSchema).optional(),
+    svgPath: z.string().optional(),
+    viewBox: z.string().optional(),
   }),
   meta: z.object({
     locked: z.boolean().optional(),

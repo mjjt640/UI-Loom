@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  createButtonNode,
-  createFrameNode,
   insertChildNode,
 } from '../../../src/domain/commands/editorCommands'
 import { exportToHtmlCssJsBundle } from '../../../src/domain/exporter/htmlCssJsExporter'
@@ -10,11 +8,12 @@ import { exportToReactTailwindBundle } from '../../../src/domain/exporter/reactT
 import { exportToVue3Bundle } from '../../../src/domain/exporter/vue3Exporter'
 import { createEmptyDocument } from '../../../src/domain/model/factories'
 import type { LayoutProps } from '../../../src/domain/model/types'
+import { testButtonNode, testFrameNode } from './nodeTestFactories'
 
 describe('responsive layout export', () => {
   it('exports fill and hug sizing with min/max bounds as Tailwind classes', () => {
     const document = createEmptyDocument('Responsive Tailwind Test')
-    const frame = createFrameNode({
+    const frame = testFrameNode({
       width: 'fill',
       height: 'hug',
       minWidth: 320,
@@ -32,7 +31,7 @@ describe('responsive layout export', () => {
 
   it('exports absolute constraints as deterministic Tailwind positioning classes', () => {
     const document = createEmptyDocument('Constraint Tailwind Test')
-    const button = createButtonNode('约束按钮')
+    const button = testButtonNode('约束按钮')
     const constrainedButton = {
       ...button,
       layout: {
@@ -53,7 +52,7 @@ describe('responsive layout export', () => {
   it('exports the same responsive semantics to HTML CSS and Vue style output', () => {
     const document = createEmptyDocument('Responsive CSS Test')
     const frame = {
-      ...createFrameNode({
+      ...testFrameNode({
         width: 'fill',
         height: 'hug',
         minWidth: 360,
@@ -66,7 +65,7 @@ describe('responsive layout export', () => {
       id: 'responsive-frame',
     }
     const withFrame = insertChildNode(document, document.rootNodeId, frame)
-    const next = insertChildNode(withFrame, frame.id, createButtonNode('继续'))
+    const next = insertChildNode(withFrame, frame.id, testButtonNode('继续'))
     const htmlBundle = exportToHtmlCssJsBundle(next)
     const vueBundle = exportToVue3Bundle(next)
     const reactBundle = exportToReactTailwindBundle(next)

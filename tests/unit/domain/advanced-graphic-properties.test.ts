@@ -1,18 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import {
-  createFrameNode,
-  createRectNode,
   insertChildNode,
 } from '../../../src/domain/commands/editorCommands'
 import { exportToHtmlCssJsBundle } from '../../../src/domain/exporter/htmlCssJsExporter'
 import { renderReactNode } from '../../../src/domain/exporter/reactTailwindExporter'
 import { createEmptyDocument } from '../../../src/domain/model/factories'
+import { testFrameNode, testRectNode } from './nodeTestFactories'
 
 describe('advanced graphic properties', () => {
   it('exports deterministic React classes for arbitrary graphic styles', () => {
     const document = createEmptyDocument('Advanced Graphic Test')
     const rect = {
-      ...createRectNode(),
+      ...testRectNode(),
       style: {
         background: '#f97316',
         borderColor: '#0f172a',
@@ -35,10 +34,11 @@ describe('advanced graphic properties', () => {
 
   it('exports advanced graphic styles through HTML CSS output', () => {
     const document = createEmptyDocument('Advanced CSS Test')
+    const baseFrame = testFrameNode()
     const frame = {
-      ...createFrameNode(),
+      ...baseFrame,
       style: {
-        ...createFrameNode().style,
+        ...baseFrame.style,
         background: '#ecfeff',
         borderColor: '#0891b2',
         borderWidth: 2,

@@ -1,5 +1,42 @@
 import { createId } from '../../utils/id'
-import type { LayoutProps, PageDocument, UINode } from '../model/types'
+import type {
+  LayoutProps,
+  PageDocument,
+  PathNodePoint,
+  UINode,
+} from '../model/types'
+
+interface NodeCreationOptions {
+  layout: LayoutProps
+}
+
+interface TextNodeCreationOptions extends NodeCreationOptions {
+  text: string
+}
+
+interface ButtonNodeCreationOptions extends NodeCreationOptions {
+  text: string
+}
+
+interface ImageNodeCreationOptions extends NodeCreationOptions {
+  alt: string
+  src: string
+}
+
+interface IconNodeCreationOptions extends NodeCreationOptions {
+  name: string
+  svgPath: string
+  viewBox: string
+}
+
+interface PathNodeCreationOptions extends NodeCreationOptions {
+  pathData: string
+  pathNodes?: PathNodePoint[]
+}
+
+interface InputNodeCreationOptions extends NodeCreationOptions {
+  placeholder: string
+}
 
 type AlignableNode = UINode & {
   layout: UINode['layout'] & {
@@ -17,28 +54,34 @@ type AbsoluteLayerNode = UINode & {
   }
 }
 
-export function createTextNode(text: string): UINode {
+export function createTextNode({
+  layout,
+  text,
+}: TextNodeCreationOptions): UINode {
   return {
     id: createId(),
     type: 'text',
     name: 'Text',
     parentId: null,
     children: [],
-    layout: { mode: 'absolute', x: 0, y: 0, width: 160, height: 32 },
+    layout,
     style: { color: '#111827', fontSize: 24, fontWeight: 600 },
     content: { text },
     meta: {},
   }
 }
 
-export function createButtonNode(text = '按钮'): UINode {
+export function createButtonNode({
+  layout,
+  text,
+}: ButtonNodeCreationOptions): UINode {
   return {
     id: createId(),
     type: 'button',
     name: 'Button',
     parentId: null,
     children: [],
-    layout: { mode: 'absolute', x: 40, y: 72, width: 120, height: 44 },
+    layout,
     style: {
       background: '#111827',
       color: '#ffffff',
@@ -51,39 +94,35 @@ export function createButtonNode(text = '按钮'): UINode {
   }
 }
 
-export function createImageNode(src = ''): UINode {
+export function createImageNode({
+  alt,
+  layout,
+  src,
+}: ImageNodeCreationOptions): UINode {
   return {
     id: createId(),
     type: 'image',
     name: 'Image',
     parentId: null,
     children: [],
-    layout: { mode: 'absolute', x: 40, y: 136, width: 240, height: 160 },
+    layout,
     style: { radius: 16 },
     content: {
       src,
-      alt: '图片描述',
+      alt,
     },
     meta: {},
   }
 }
 
-export function createContainerNode(): UINode {
+export function createContainerNode({ layout }: NodeCreationOptions): UINode {
   return {
     id: createId(),
     type: 'container',
     name: 'Container',
     parentId: null,
     children: [],
-    layout: {
-      mode: 'flex-column',
-      x: 320,
-      y: 72,
-      width: 280,
-      height: 180,
-      gap: 12,
-      padding: { top: 16, right: 16, bottom: 16, left: 16 },
-    },
+    layout,
     style: {
       background: '#f8fafc',
       radius: 20,
@@ -95,25 +134,14 @@ export function createContainerNode(): UINode {
   }
 }
 
-export function createFrameNode(layout: Partial<LayoutProps> = {}): UINode {
+export function createFrameNode({ layout }: NodeCreationOptions): UINode {
   return {
     id: createId(),
     type: 'frame',
     name: 'Frame',
     parentId: null,
     children: [],
-    layout: {
-      mode: 'flex-column',
-      x: 120,
-      y: 120,
-      width: 320,
-      height: 240,
-      gap: 16,
-      padding: { top: 24, right: 24, bottom: 24, left: 24 },
-      align: 'stretch',
-      justify: 'start',
-      ...layout,
-    },
+    layout,
     style: {
       background: '#ffffff',
       radius: 24,
@@ -125,14 +153,14 @@ export function createFrameNode(layout: Partial<LayoutProps> = {}): UINode {
   }
 }
 
-export function createRectNode(): UINode {
+export function createRectNode({ layout }: NodeCreationOptions): UINode {
   return {
     id: createId(),
     type: 'rect',
-    name: 'Rectangle',
+    name: '矩形 1',
     parentId: null,
     children: [],
-    layout: { mode: 'absolute', x: 96, y: 96, width: 160, height: 120 },
+    layout,
     style: {
       background: '#dbeafe',
       radius: 18,
@@ -141,6 +169,225 @@ export function createRectNode(): UINode {
     },
     content: {},
     meta: {},
+  }
+}
+
+export function createEllipseNode({ layout }: NodeCreationOptions): UINode {
+  return {
+    id: createId(),
+    type: 'ellipse',
+    name: '圆形 1',
+    parentId: null,
+    children: [],
+    layout,
+    style: {
+      background: '#dbeafe',
+      borderWidth: 1,
+      borderColor: '#60a5fa',
+    },
+    content: {},
+    meta: {},
+  }
+}
+
+export function createTriangleNode({ layout }: NodeCreationOptions): UINode {
+  return {
+    id: createId(),
+    type: 'triangle',
+    name: '三角形 1',
+    parentId: null,
+    children: [],
+    layout,
+    style: {
+      background: '#dbeafe',
+      borderWidth: 1,
+      borderColor: '#60a5fa',
+    },
+    content: {},
+    meta: {},
+  }
+}
+
+export function createStarNode({ layout }: NodeCreationOptions): UINode {
+  return {
+    id: createId(),
+    type: 'star',
+    name: '星形 1',
+    parentId: null,
+    children: [],
+    layout,
+    style: {
+      background: '#dbeafe',
+      borderWidth: 1,
+      borderColor: '#60a5fa',
+    },
+    content: {},
+    meta: {},
+  }
+}
+
+export function createPolygonNode({ layout }: NodeCreationOptions): UINode {
+  return {
+    id: createId(),
+    type: 'polygon',
+    name: '多边形 1',
+    parentId: null,
+    children: [],
+    layout,
+    style: {
+      background: '#dbeafe',
+      borderWidth: 1,
+      borderColor: '#60a5fa',
+    },
+    content: {},
+    meta: {},
+  }
+}
+
+export function createPathNode({
+  layout,
+  pathData,
+  pathNodes,
+}: PathNodeCreationOptions): UINode {
+  return {
+    id: createId(),
+    type: 'path',
+    name: '路径 1',
+    parentId: null,
+    children: [],
+    layout,
+    style: {
+      background: '#dbeafe',
+      borderWidth: 3,
+      borderColor: '#2563eb',
+    },
+    content: {
+      pathData,
+      pathNodes,
+    },
+    meta: {},
+  }
+}
+
+export function createSliceNode({ layout }: NodeCreationOptions): UINode {
+  return {
+    id: createId(),
+    type: 'slice',
+    name: '切片 1',
+    parentId: null,
+    children: [],
+    layout,
+    style: {
+      borderWidth: 1,
+      borderColor: '#22c55e',
+    },
+    content: {},
+    meta: {},
+  }
+}
+
+export function createIconNode({
+  layout,
+  name,
+  svgPath,
+  viewBox,
+}: IconNodeCreationOptions): UINode {
+  return {
+    id: createId(),
+    type: 'icon',
+    name,
+    parentId: null,
+    children: [],
+    layout,
+    style: {
+      color: '#6b7280',
+    },
+    content: {
+      svgPath,
+      viewBox,
+    },
+    meta: { componentHint: 'remix-icon' },
+  }
+}
+
+export function createInputNode({
+  layout,
+  placeholder,
+}: InputNodeCreationOptions): UINode {
+  return {
+    id: createId(),
+    type: 'input',
+    name: 'Input',
+    parentId: null,
+    children: [],
+    layout,
+    style: {
+      background: '#ffffff',
+      color: '#111827',
+      radius: 10,
+      borderWidth: 1,
+      borderColor: '#d1d5db',
+      fontSize: 14,
+    },
+    content: { placeholder },
+    meta: { componentHint: 'shadcn-input' },
+  }
+}
+
+export function createCardNode({ layout }: NodeCreationOptions): UINode {
+  return {
+    id: createId(),
+    type: 'card',
+    name: 'Card',
+    parentId: null,
+    children: [],
+    layout: {
+      ...layout,
+      mode: 'flex-column',
+      gap: 12,
+      padding: { top: 24, right: 24, bottom: 24, left: 24 },
+      align: 'stretch',
+      justify: 'start',
+    },
+    style: {
+      background: '#ffffff',
+      radius: 16,
+      borderWidth: 1,
+      borderColor: '#e5e7eb',
+      shadow: '0 18px 45px rgba(15, 23, 42, 0.08)',
+    },
+    content: {
+      text: 'Card title\nUse this shadcn/ui inspired surface for content blocks.',
+    },
+    meta: { componentHint: 'shadcn-card' },
+  }
+}
+
+export function createListNode({ layout }: NodeCreationOptions): UINode {
+  return {
+    id: createId(),
+    type: 'list',
+    name: 'List',
+    parentId: null,
+    children: [],
+    layout: {
+      ...layout,
+      mode: 'flex-column',
+      gap: 8,
+      padding: { top: 16, right: 16, bottom: 16, left: 16 },
+      align: 'stretch',
+      justify: 'start',
+    },
+    style: {
+      background: '#ffffff',
+      radius: 14,
+      borderWidth: 1,
+      borderColor: '#e5e7eb',
+    },
+    content: {
+      text: 'Dashboard\nSettings\nBilling',
+    },
+    meta: { componentHint: 'shadcn-list' },
   }
 }
 
@@ -634,10 +881,17 @@ export function frameSelectedNodes(document: PageDocument): PageDocument {
     ),
   )
   const frameNode = createFrameNode({
-    x: left,
-    y: top,
-    width: right - left,
-    height: bottom - top,
+    layout: {
+      mode: 'flex-column',
+      x: left,
+      y: top,
+      width: right - left,
+      height: bottom - top,
+      gap: 16,
+      padding: { top: 24, right: 24, bottom: 24, left: 24 },
+      align: 'stretch',
+      justify: 'start',
+    },
   })
   const firstSelectedIndex = parent.children.findIndex((childId) =>
     selectedIds.has(childId),

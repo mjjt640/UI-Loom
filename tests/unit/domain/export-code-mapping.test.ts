@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  createButtonNode,
-  createFrameNode,
   insertChildNode,
 } from '../../../src/domain/commands/editorCommands'
 import { exportToHtmlCssJsBundle } from '../../../src/domain/exporter/htmlCssJsExporter'
@@ -9,16 +7,17 @@ import { exportToReactTailwindBundle } from '../../../src/domain/exporter/reactT
 import { exportToSingleFileHtmlBundle } from '../../../src/domain/exporter/singleFileHtmlExporter'
 import { exportToVue3Bundle } from '../../../src/domain/exporter/vue3Exporter'
 import { createEmptyDocument } from '../../../src/domain/model/factories'
+import { testButtonNode, testFrameNode } from './nodeTestFactories'
 
 describe('export code mapping', () => {
   it('maps nodes to generated React component files', () => {
     const document = createEmptyDocument('React Mapping Test')
     const frame = {
-      ...createFrameNode(),
+      ...testFrameNode(),
       id: 'hero-frame',
       meta: { componentHint: 'hero-section' },
     }
-    const button = { ...createButtonNode('开始'), id: 'hero-button' }
+    const button = { ...testButtonNode('开始'), id: 'hero-button' }
     const withFrame = insertChildNode(document, document.rootNodeId, frame)
     const next = insertChildNode(withFrame, frame.id, button)
     const bundle = exportToReactTailwindBundle(next)
@@ -37,7 +36,7 @@ describe('export code mapping', () => {
 
   it('maps nodes to generated Vue and HTML files', () => {
     const document = createEmptyDocument('Cross Target Mapping Test')
-    const button = { ...createButtonNode('保存'), id: 'save-button' }
+    const button = { ...testButtonNode('保存'), id: 'save-button' }
     const next = insertChildNode(document, document.rootNodeId, button)
     const vueBundle = exportToVue3Bundle(next)
     const htmlBundle = exportToHtmlCssJsBundle(next)

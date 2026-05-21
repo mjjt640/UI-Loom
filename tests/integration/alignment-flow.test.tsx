@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createEmptyDocument } from '../../src/domain/model/factories'
 import { EditorScreen } from '../../src/features/editor/EditorScreen'
 import { useEditorStore } from '../../src/store/editorStore'
+import { addButton, addContainer, addImage, addRect } from './editorTestActions'
 
 describe('alignment flow', () => {
   beforeEach(() => {
@@ -15,11 +16,11 @@ describe('alignment flow', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByText('矩形'))
-    await user.click(screen.getByText('新增按钮'))
+    await addRect(user)
+    await addButton(user)
     await user.click(
-      within(screen.getByRole('listitem', { name: 'Rectangle' })).getByLabelText(
-        '多选 Rectangle',
+      within(screen.getByRole('listitem', { name: '矩形 1' })).getByLabelText(
+        '多选 矩形 1',
       ),
     )
     await user.click(
@@ -40,12 +41,12 @@ describe('alignment flow', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByText('矩形'))
-    await user.click(screen.getByText('新增图片'))
-    await user.click(screen.getByText('新增容器'))
+    await addRect(user)
+    await addImage(user)
+    await addContainer(user)
     await user.click(
-      within(screen.getByRole('listitem', { name: 'Rectangle' })).getByLabelText(
-        '多选 Rectangle',
+      within(screen.getByRole('listitem', { name: '矩形 1' })).getByLabelText(
+        '多选 矩形 1',
       ),
     )
     await user.click(

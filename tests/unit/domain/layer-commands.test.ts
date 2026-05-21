@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  createButtonNode,
-  createRectNode,
   insertChildNode,
   moveNodeBackward,
   moveNodeForward,
@@ -10,12 +8,13 @@ import {
 } from '../../../src/domain/commands/editorCommands'
 import { exportToReactTailwindBundle } from '../../../src/domain/exporter/reactTailwindBundleExporter'
 import { createEmptyDocument } from '../../../src/domain/model/factories'
+import { testButtonNode, testRectNode } from './nodeTestFactories'
 
 describe('layer commands', () => {
   it('moves a layer forward and backward within the parent children order', () => {
     const document = createEmptyDocument('Layer Order Test')
-    const rect = createRectNode()
-    const button = createButtonNode('购买')
+    const rect = testRectNode()
+    const button = testButtonNode('购买')
     const withRect = insertChildNode(document, document.rootNodeId, rect)
     const withButton = insertChildNode(withRect, withRect.rootNodeId, button)
 
@@ -34,7 +33,7 @@ describe('layer commands', () => {
 
   it('stores layer visibility and excludes hidden nodes from export', () => {
     const document = createEmptyDocument('Layer Visibility Test')
-    const button = createButtonNode('隐藏按钮')
+    const button = testButtonNode('隐藏按钮')
     const withButton = insertChildNode(document, document.rootNodeId, button)
     const hidden = setNodeVisible(withButton, button.id, false)
     const bundle = exportToReactTailwindBundle(hidden)
@@ -46,7 +45,7 @@ describe('layer commands', () => {
 
   it('stores layer locked state and clears selection when the selected layer is locked', () => {
     const document = createEmptyDocument('Layer Lock Test')
-    const rect = createRectNode()
+    const rect = testRectNode()
     const withRect = insertChildNode(document, document.rootNodeId, rect)
     const selected = {
       ...withRect,

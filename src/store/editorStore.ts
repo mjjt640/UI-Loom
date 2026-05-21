@@ -1,12 +1,6 @@
 import { create } from 'zustand'
 import {
   alignNodesLeft,
-  createButtonNode,
-  createContainerNode,
-  createFrameNode,
-  createImageNode,
-  createRectNode,
-  createTextNode,
   distributeNodesHorizontally,
   frameSelectedNodes,
   groupSelectedNodes,
@@ -29,6 +23,7 @@ import type {
   LayoutProps,
   PageDocument,
   StyleProps,
+  UINode,
 } from '../domain/model/types'
 import {
   updateNodeContent,
@@ -41,14 +36,10 @@ import {
 
 interface EditorState {
   document: PageDocument
-  addTextNode: () => void
   alignSelectedNodesLeft: () => void
-  addButtonNode: () => void
-  addImageNode: () => void
-  addContainerNode: () => void
-  addFrameNode: () => void
-  addRectNode: () => void
   deleteSelectedNode: () => void
+  insertNode: (node: UINode) => void
+  updateCanvasSize: (size: { height: number; width: number }) => void
   moveLayerBackward: (nodeId: string) => void
   moveLayerForward: (nodeId: string) => void
   moveSelectedNodeToFirstContainer: () => void
@@ -79,76 +70,34 @@ export const useEditorStore = create<EditorState>((set) => ({
   document: initialDocument,
   alignSelectedNodesLeft: () =>
     set((state) => withPersistedDocument(alignNodesLeft(state.document))),
-  addTextNode: () =>
-    set((state) =>
-      withPersistedDocument(
-        insertChildNode(
-          state.document,
-          state.document.rootNodeId,
-          createTextNode('新文本'),
-        ),
-      ),
-    ),
-  addButtonNode: () =>
-    set((state) =>
-      withPersistedDocument(
-        insertChildNode(
-          state.document,
-          state.document.rootNodeId,
-          createButtonNode(),
-        ),
-      ),
-    ),
-  addImageNode: () =>
-    set((state) =>
-      withPersistedDocument(
-        insertChildNode(
-          state.document,
-          state.document.rootNodeId,
-          createImageNode(),
-        ),
-      ),
-    ),
-  addContainerNode: () =>
-    set((state) =>
-      withPersistedDocument(
-        insertChildNode(
-          state.document,
-          state.document.rootNodeId,
-          createContainerNode(),
-        ),
-      ),
-    ),
-  addFrameNode: () =>
-    set((state) =>
-      withPersistedDocument(
-        insertChildNode(
-          state.document,
-          state.document.rootNodeId,
-          createFrameNode(),
-        ),
-      ),
-    ),
-  addRectNode: () =>
-    set((state) =>
-      withPersistedDocument(
-        insertChildNode(
-          state.document,
-          state.document.rootNodeId,
-          createRectNode(),
-        ),
-      ),
-    ),
   deleteSelectedNode: () =>
     set((state) => {
-      const [nodeId] = state.document.selectedNodeIds
-
-      if (!nodeId) {
+      if (state.document.selectedNodeIds.length === 0) {
         return state
       }
 
-      return withPersistedDocument(removeNode(state.document, nodeId))
+      const nextDocument = state.document.selectedNodeIds.reduce(
+        (currentDocument, nodeId) => removeNode(currentDocument, nodeId),
+        state.document,
+      )
+
+      return withPersistedDocument(nextDocument)
     }),
+  insertNode: (node) =>
+    set((state) =>
+      withPersistedDocument(
+        insertChildNode(state.document, state.document.rootNodeId, node),
+      ),
+    ),
+  updateCanvasSize: ({ height, width }) =>
+    set((state) =>
+      withPersistedDocument(
+        updateNodeLayout(state.document, state.document.rootNodeId, {
+          height,
+          width,
+        }),
+      ),
+    ),
   moveLayerBackward: (nodeId) =>
     set((state) =>
       withPersistedDocument(moveNodeBackward(state.document, nodeId)),

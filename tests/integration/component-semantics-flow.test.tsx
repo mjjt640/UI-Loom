@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createEmptyDocument } from '../../src/domain/model/factories'
 import { EditorScreen } from '../../src/features/editor/EditorScreen'
 import { useEditorStore } from '../../src/store/editorStore'
+import { addFrame } from './editorTestActions'
 
 describe('component semantics flow', () => {
   beforeEach(() => {
@@ -17,7 +18,7 @@ describe('component semantics flow', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByRole('button', { name: 'Frame' }))
+    await addFrame(user)
     await user.click(screen.getByRole('group', { name: 'Frame 节点' }))
     await user.clear(screen.getByLabelText('图层名称'))
     await user.type(screen.getByLabelText('图层名称'), 'Hero Block')

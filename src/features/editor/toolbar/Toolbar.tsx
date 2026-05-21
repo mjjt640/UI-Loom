@@ -17,12 +17,6 @@ export function Toolbar({
   const alignSelectedNodesLeft = useEditorStore(
     (state) => state.alignSelectedNodesLeft,
   )
-  const addTextNode = useEditorStore((state) => state.addTextNode)
-  const addButtonNode = useEditorStore((state) => state.addButtonNode)
-  const addImageNode = useEditorStore((state) => state.addImageNode)
-  const addContainerNode = useEditorStore((state) => state.addContainerNode)
-  const addFrameNode = useEditorStore((state) => state.addFrameNode)
-  const addRectNode = useEditorStore((state) => state.addRectNode)
   const deleteSelectedNode = useEditorStore((state) => state.deleteSelectedNode)
   const distributeSelectedNodesHorizontally = useEditorStore(
     (state) => state.distributeSelectedNodesHorizontally,
@@ -40,59 +34,37 @@ export function Toolbar({
   }
 
   return (
-    <header className="flex items-center gap-2 border-b border-stone-200 bg-white px-4 py-3">
+    <header className="flex h-12 items-center gap-3 border-b border-neutral-200 bg-white px-3 text-sm text-neutral-700">
       <button
-        className="rounded-md bg-stone-900 px-3 py-2 text-sm text-white"
-        onClick={addTextNode}
+        aria-label="主菜单"
+        className="flex h-8 w-8 items-center justify-center rounded-md text-xl hover:bg-neutral-100"
         type="button"
       >
-        新增文本
+        ≡
       </button>
+      <div className="flex items-center gap-2 border-r border-neutral-200 pr-5">
+        <span className="text-neutral-500">个人文件 /</span>
+        <button className="font-semibold text-neutral-900" type="button">
+          {document.name || '无标题'}
+        </button>
+        <span className="text-neutral-500">⌄</span>
+      </div>
       <button
-        className="rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700"
-        onClick={addButtonNode}
+        className="rounded-md px-2 py-1 font-medium text-neutral-800 hover:bg-neutral-100"
         type="button"
       >
-        新增按钮
+        100%⌄
       </button>
       <button
-        className="rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700"
-        onClick={addImageNode}
-        type="button"
-      >
-        新增图片
-      </button>
-      <button
-        className="rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700"
-        onClick={addContainerNode}
-        type="button"
-      >
-        新增容器
-      </button>
-      <button
-        className="rounded-md border border-sky-300 px-3 py-2 text-sm text-sky-700"
-        onClick={addRectNode}
-        type="button"
-      >
-        矩形
-      </button>
-      <button
-        className="rounded-md border border-amber-300 px-3 py-2 text-sm text-amber-700"
-        onClick={addFrameNode}
-        type="button"
-      >
-        Frame
-      </button>
-      <button
-        className="rounded-md border border-rose-200 px-3 py-2 text-sm text-rose-700 disabled:cursor-not-allowed disabled:opacity-40"
+        className="ml-3 rounded-md border border-neutral-200 px-2.5 py-1.5 text-xs text-neutral-600 disabled:cursor-not-allowed disabled:opacity-40"
         disabled={selectedCount === 0}
         onClick={deleteSelectedNode}
         type="button"
       >
-        删除节点
+        删除
       </button>
       <button
-        className="rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700 disabled:cursor-not-allowed disabled:opacity-40"
+        className="rounded-md border border-neutral-200 px-2.5 py-1.5 text-xs text-neutral-600 disabled:cursor-not-allowed disabled:opacity-40"
         disabled={selectedCount < 2}
         onClick={alignSelectedNodesLeft}
         type="button"
@@ -100,7 +72,7 @@ export function Toolbar({
         左对齐
       </button>
       <button
-        className="rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700 disabled:cursor-not-allowed disabled:opacity-40"
+        className="rounded-md border border-neutral-200 px-2.5 py-1.5 text-xs text-neutral-600 disabled:cursor-not-allowed disabled:opacity-40"
         disabled={selectedCount < 3}
         onClick={distributeSelectedNodesHorizontally}
         type="button"
@@ -108,7 +80,7 @@ export function Toolbar({
         水平分布
       </button>
       <button
-        className="rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700 disabled:cursor-not-allowed disabled:opacity-40"
+        className="rounded-md border border-neutral-200 px-2.5 py-1.5 text-xs text-neutral-600 disabled:cursor-not-allowed disabled:opacity-40"
         disabled={selectedCount < 2}
         onClick={groupSelectedNodes}
         type="button"
@@ -116,7 +88,7 @@ export function Toolbar({
         组合
       </button>
       <button
-        className="rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700 disabled:cursor-not-allowed disabled:opacity-40"
+        className="rounded-md border border-neutral-200 px-2.5 py-1.5 text-xs text-neutral-600 disabled:cursor-not-allowed disabled:opacity-40"
         disabled={selectedCount < 2}
         onClick={frameSelectedNodes}
         type="button"
@@ -124,17 +96,17 @@ export function Toolbar({
         成 Frame
       </button>
       <button
-        className="rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700 disabled:cursor-not-allowed disabled:opacity-40"
+        className="rounded-md border border-neutral-200 px-2.5 py-1.5 text-xs text-neutral-600 disabled:cursor-not-allowed disabled:opacity-40"
         disabled={selectedNode?.type !== 'group'}
         onClick={ungroupSelectedNode}
         type="button"
       >
         取消组合
       </button>
-      <label className="ml-auto flex items-center gap-2 text-sm text-stone-600">
+      <label className="ml-auto flex items-center gap-2 text-xs text-neutral-500">
         <span>导出格式</span>
         <select
-          className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-700"
+          className="rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-xs text-neutral-700"
           onChange={(event) =>
             onExportTargetChange(event.target.value as ExportTargetId)
           }
@@ -148,7 +120,26 @@ export function Toolbar({
         </select>
       </label>
       <button
-        className="rounded-md border border-stone-900 bg-stone-900 px-3 py-2 text-sm text-white"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-[#c8a756] text-xs font-semibold text-white"
+        type="button"
+      >
+        烟
+      </button>
+      <button
+        className="rounded-lg bg-[#1683ff] px-4 py-1.5 font-semibold text-white"
+        type="button"
+      >
+        分享
+      </button>
+      <button
+        aria-label="预览"
+        className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-900 hover:bg-neutral-100"
+        type="button"
+      >
+        ▶
+      </button>
+      <button
+        className="rounded-lg border border-neutral-200 px-3 py-1.5 font-semibold text-neutral-900"
         onClick={exportSelectedTarget}
         type="button"
       >

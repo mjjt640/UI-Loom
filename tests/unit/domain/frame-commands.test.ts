@@ -1,17 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import {
-  createButtonNode,
-  createFrameNode,
-  createRectNode,
   frameSelectedNodes,
   insertChildNode,
   selectNodes,
 } from '../../../src/domain/commands/editorCommands'
 import { createEmptyDocument } from '../../../src/domain/model/factories'
+import { testButtonNode, testFrameNode, testRectNode } from './nodeTestFactories'
 
 describe('frame commands', () => {
   it('creates a frame node with auto layout defaults', () => {
-    const frame = createFrameNode()
+    const frame = testFrameNode()
 
     expect(frame.type).toBe('frame')
     expect(frame.name).toBe('Frame')
@@ -33,12 +31,12 @@ describe('frame commands', () => {
     const withRect = insertChildNode(
       document,
       document.rootNodeId,
-      createRectNode(),
+      testRectNode(),
     )
     const withButton = insertChildNode(
       withRect,
       withRect.rootNodeId,
-      createButtonNode('确认'),
+      testButtonNode('确认'),
     )
     const [rectId, buttonId] = withButton.nodes[withButton.rootNodeId].children
     const selected = selectNodes(withButton, [rectId, buttonId])

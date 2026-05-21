@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createEmptyDocument } from '../../src/domain/model/factories'
 import { EditorScreen } from '../../src/features/editor/EditorScreen'
 import { useEditorStore } from '../../src/store/editorStore'
+import { addButton, addContainer, addFrame } from './editorTestActions'
 
 describe('export preview file tree', () => {
   beforeEach(() => {
@@ -17,7 +18,7 @@ describe('export preview file tree', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByRole('button', { name: 'Frame' }))
+    await addFrame(user)
 
     const preview = screen.getByRole('region', { name: '代码预览' })
 
@@ -46,8 +47,8 @@ describe('export preview file tree', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByRole('button', { name: '新增容器' }))
-    await user.click(screen.getByRole('button', { name: '新增按钮' }))
+    await addContainer(user)
+    await addButton(user)
     await user.click(screen.getByRole('button', { name: '按钮' }))
     await user.click(screen.getByRole('button', { name: '移入容器' }))
 

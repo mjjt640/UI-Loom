@@ -1,21 +1,23 @@
 import { describe, expect, it } from 'vitest'
 import {
-  createButtonNode,
-  createFrameNode,
-  createImageNode,
-  createRectNode,
   insertChildNode,
 } from '../../../src/domain/commands/editorCommands'
 import { exportToHtmlCssJsBundle } from '../../../src/domain/exporter/htmlCssJsExporter'
 import { exportToReactTailwindBundle } from '../../../src/domain/exporter/reactTailwindBundleExporter'
 import { exportToVue3Bundle } from '../../../src/domain/exporter/vue3Exporter'
 import { createEmptyDocument } from '../../../src/domain/model/factories'
+import {
+  testButtonNode,
+  testFrameNode,
+  testImageNode,
+  testRectNode,
+} from './nodeTestFactories'
 
 describe('export quality', () => {
   it('exports named frames as semantic sections across React and HTML', () => {
     const document = createEmptyDocument('Semantic Export Test')
     const frame = {
-      ...createFrameNode(),
+      ...testFrameNode(),
       id: 'hero-frame',
       name: 'Hero Section',
       meta: { componentHint: 'hero-section' },
@@ -35,13 +37,13 @@ describe('export quality', () => {
 
   it('keeps button and image accessibility deterministic', () => {
     const document = createEmptyDocument('Accessibility Export Test')
-    const button = { ...createButtonNode('购买'), id: 'buy-button' }
+    const button = { ...testButtonNode('购买'), id: 'buy-button' }
     const image = {
-      ...createImageNode('https://example.com/product.png'),
+      ...testImageNode('https://example.com/product.png'),
       id: 'product-image',
       content: { alt: '产品图', src: 'https://example.com/product.png' },
     }
-    const rect = { ...createRectNode(), id: 'accent-rect', name: 'Accent Glow' }
+    const rect = { ...testRectNode(), id: 'accent-rect', name: 'Accent Glow' }
     const withButton = insertChildNode(document, document.rootNodeId, button)
     const withImage = insertChildNode(withButton, withButton.rootNodeId, image)
     const next = insertChildNode(withImage, withImage.rootNodeId, rect)
@@ -59,7 +61,7 @@ describe('export quality', () => {
   it('documents Vue componentized export usage', () => {
     const document = createEmptyDocument('Vue README Test')
     const frame = {
-      ...createFrameNode(),
+      ...testFrameNode(),
       id: 'hero-frame',
       meta: { componentHint: 'hero-section' },
     }

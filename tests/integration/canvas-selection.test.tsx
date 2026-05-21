@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createEmptyDocument } from '../../src/domain/model/factories'
 import { EditorScreen } from '../../src/features/editor/EditorScreen'
 import { useEditorStore } from '../../src/store/editorStore'
+import { addButton, addRect, addText } from './editorTestActions'
 
 describe('canvas selection', () => {
   beforeEach(() => {
@@ -14,7 +15,7 @@ describe('canvas selection', () => {
   it('selects a text node when clicked', async () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
-    await user.click(screen.getByText('新增文本'))
+    await addText(user)
     await user.click(screen.getByText('新文本'))
     expect(screen.getByText('已选中 1 个节点')).toBeInTheDocument()
   })
@@ -23,8 +24,9 @@ describe('canvas selection', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByText('矩形'))
-    await user.click(screen.getByText('新增按钮'))
+    await addRect(user)
+    await addButton(user)
+    await user.click(screen.getByRole('button', { name: '选择工具' }))
 
     const canvas = screen.getByLabelText('设计画布')
     canvas.getBoundingClientRect = () =>
