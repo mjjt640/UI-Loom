@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  createButtonNode,
-  createRectNode,
   groupSelectedNodes,
   insertChildNode,
   selectNodes,
@@ -9,12 +7,13 @@ import {
 } from '../../../src/domain/commands/editorCommands'
 import { exportToReactTailwindBundle } from '../../../src/domain/exporter/reactTailwindBundleExporter'
 import { createEmptyDocument } from '../../../src/domain/model/factories'
+import { testButtonNode, testRectNode } from './nodeTestFactories'
 
 describe('group commands', () => {
   it('groups selected sibling nodes into a relative group', () => {
     const document = createEmptyDocument('Group Test')
-    const rect = createRectNode()
-    const button = createButtonNode('购买')
+    const rect = testRectNode()
+    const button = testButtonNode('购买')
     const withRect = insertChildNode(document, document.rootNodeId, rect)
     const withButton = insertChildNode(withRect, withRect.rootNodeId, button)
     const selected = selectNodes(withButton, [rect.id, button.id])
@@ -36,8 +35,8 @@ describe('group commands', () => {
 
   it('ungroups the selected group back into its parent', () => {
     const document = createEmptyDocument('Ungroup Test')
-    const rect = createRectNode()
-    const button = createButtonNode('购买')
+    const rect = testRectNode()
+    const button = testButtonNode('购买')
     const grouped = groupSelectedNodes(
       selectNodes(
         insertChildNode(
@@ -62,8 +61,8 @@ describe('group commands', () => {
 
   it('exports grouped children explicitly', () => {
     const document = createEmptyDocument('Grouped Export Test')
-    const rect = createRectNode()
-    const button = createButtonNode('购买')
+    const rect = testRectNode()
+    const button = testButtonNode('购买')
     const withRect = insertChildNode(document, document.rootNodeId, rect)
     const withButton = insertChildNode(withRect, withRect.rootNodeId, button)
     const grouped = groupSelectedNodes(selectNodes(withButton, [rect.id, button.id]))

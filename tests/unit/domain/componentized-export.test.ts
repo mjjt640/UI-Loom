@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  createButtonNode,
-  createContainerNode,
-  createFrameNode,
   insertChildNode,
 } from '../../../src/domain/commands/editorCommands'
 import {
@@ -13,11 +10,12 @@ import {
 import { exportToReactTailwindBundle } from '../../../src/domain/exporter/reactTailwindBundleExporter'
 import { exportToVue3Bundle } from '../../../src/domain/exporter/vue3Exporter'
 import { createEmptyDocument } from '../../../src/domain/model/factories'
+import { testButtonNode, testContainerNode, testFrameNode } from './nodeTestFactories'
 
 describe('componentized export naming', () => {
   it('uses component hints as stable PascalCase component names', () => {
     const frame = {
-      ...createFrameNode(),
+      ...testFrameNode(),
       meta: { componentHint: 'hero-section' },
     }
 
@@ -27,7 +25,7 @@ describe('componentized export naming', () => {
 
   it('falls back to node names when no component hint exists', () => {
     const container = {
-      ...createContainerNode(),
+      ...testContainerNode(),
       name: 'pricing cards',
     }
 
@@ -37,17 +35,17 @@ describe('componentized export naming', () => {
 
   it('deduplicates component names deterministically within one bundle', () => {
     const first = {
-      ...createFrameNode(),
+      ...testFrameNode(),
       id: 'first',
       meta: { componentHint: 'hero-section' },
     }
     const second = {
-      ...createFrameNode(),
+      ...testFrameNode(),
       id: 'second',
       meta: { componentHint: 'Hero Section' },
     }
     const third = {
-      ...createFrameNode(),
+      ...testFrameNode(),
       id: 'third',
       name: 'hero section',
     }
@@ -72,13 +70,13 @@ describe('React componentized export', () => {
   it('exports semantic top-level frames as component files', () => {
     const document = createEmptyDocument('Componentized React Test')
     const heroFrame = {
-      ...createFrameNode(),
+      ...testFrameNode(),
       id: 'hero-frame',
       name: 'Hero Section',
       meta: { componentHint: 'hero-section' },
     }
     const button = {
-      ...createButtonNode('开始体验'),
+      ...testButtonNode('开始体验'),
       id: 'hero-button',
     }
     const withHero = insertChildNode(document, document.rootNodeId, heroFrame)
@@ -95,7 +93,7 @@ describe('React componentized export', () => {
     )
     expect(bundle.files[0].content).toContain('<HeroSection />')
     expect(bundle.files[1].content).toContain('export function HeroSection()')
-    expect(bundle.files[1].content).toContain('aria-label="Frame 节点"')
+    expect(bundle.files[1].content).toContain('aria-label="Hero Section"')
     expect(bundle.files[1].content).toContain('开始体验')
   })
 })
@@ -104,13 +102,13 @@ describe('Vue componentized export', () => {
   it('exports semantic top-level frames as Vue component files', () => {
     const document = createEmptyDocument('Componentized Vue Test')
     const heroFrame = {
-      ...createFrameNode(),
+      ...testFrameNode(),
       id: 'hero-frame',
       name: 'Hero Section',
       meta: { componentHint: 'hero-section' },
     }
     const button = {
-      ...createButtonNode('立即开始'),
+      ...testButtonNode('立即开始'),
       id: 'hero-button',
     }
     const withHero = insertChildNode(document, document.rootNodeId, heroFrame)
@@ -120,13 +118,14 @@ describe('Vue componentized export', () => {
     expect(bundle.files.map((file) => file.path)).toEqual([
       'GeneratedPage.vue',
       'components/HeroSection.vue',
+      'README.md',
     ])
     expect(bundle.files[0].content).toContain(
       "import HeroSection from './components/HeroSection.vue'",
     )
     expect(bundle.files[0].content).toContain('<HeroSection />')
     expect(bundle.files[1].content).toContain('<template>')
-    expect(bundle.files[1].content).toContain('aria-label="Frame 节点"')
+    expect(bundle.files[1].content).toContain('aria-label="Hero Section"')
     expect(bundle.files[1].content).toContain('立即开始')
     expect(bundle.files[1].content).toContain('<style scoped>')
   })

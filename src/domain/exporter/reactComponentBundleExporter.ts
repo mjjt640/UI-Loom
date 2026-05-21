@@ -1,5 +1,6 @@
 import type { PageDocument, UINode } from '../model/types'
 import type { ExportBundle, GeneratedFile } from './exportTypes'
+import { mappingsForSubtree } from './codeMapping'
 import { uniqueComponentNamesForNodes } from './componentNaming'
 import {
   indentReact,
@@ -91,6 +92,10 @@ function reactReadme() {
     '# UI Loom React Export',
     '',
     '把 `src/GeneratedPage.tsx` 和 `src/components/` 放入 React + Tailwind 项目中使用。',
+    '',
+    '需要项目已配置 Tailwind CSS。导出的 `w-full`、`h-auto`、`min-w-*`、`max-w-*` 和定位类来自设计节点的响应式布局语义。',
+    '',
+    '`data-ui-node-id` 用于把设计节点稳定映射到生成代码。',
   ].join('\n')
 }
 
@@ -98,11 +103,22 @@ export function exportToReactComponentBundle(
   document: PageDocument,
 ): ExportBundle {
   const boundaries = componentBoundaries(document)
+  const boundaryIds = new Set(boundaries.map((boundary) => boundary.node.id))
   const componentFiles: GeneratedFile[] = boundaries.map((boundary) => ({
     path: `src/components/${boundary.fileName}.tsx`,
     language: 'tsx',
     content: renderComponentFile(document, boundary),
   }))
+  const rootFileMappings = rootVisibleNodes(document)
+    .filter((node) => !boundaryIds.has(node.id))
+    .flatMap((node) => mappingsForSubtree(document, node, 'src/GeneratedPage.tsx'))
+  const componentMappings = boundaries.flatMap((boundary) =>
+    mappingsForSubtree(
+      document,
+      boundary.node,
+      `src/components/${boundary.fileName}.tsx`,
+    ),
+  )
 
   return {
     target: 'react-tailwind',
@@ -119,5 +135,6 @@ export function exportToReactComponentBundle(
         content: reactReadme(),
       },
     ],
+    mappings: [...rootFileMappings, ...componentMappings],
   }
 }

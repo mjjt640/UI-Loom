@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createEmptyDocument } from '../../src/domain/model/factories'
 import { EditorScreen } from '../../src/features/editor/EditorScreen'
 import { useEditorStore } from '../../src/store/editorStore'
+import { addButton, addFrame, addRect } from './editorTestActions'
 
 describe('frame auto layout flow', () => {
   beforeEach(() => {
@@ -15,7 +16,7 @@ describe('frame auto layout flow', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByRole('button', { name: 'Frame' }))
+    await addFrame(user)
 
     expect(screen.getByRole('listitem', { name: 'Frame' })).toBeInTheDocument()
     expect(screen.getByRole('group', { name: 'Frame 节点' })).toBeInTheDocument()
@@ -25,11 +26,11 @@ describe('frame auto layout flow', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByText('矩形'))
-    await user.click(screen.getByText('新增按钮'))
+    await addRect(user)
+    await addButton(user)
     await user.click(
-      within(screen.getByRole('listitem', { name: 'Rectangle' })).getByLabelText(
-        '多选 Rectangle',
+      within(screen.getByRole('listitem', { name: '矩形 1' })).getByLabelText(
+        '多选 矩形 1',
       ),
     )
     await user.click(
@@ -51,7 +52,7 @@ describe('frame auto layout flow', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByRole('button', { name: 'Frame' }))
+    await addFrame(user)
     await user.click(screen.getByRole('group', { name: 'Frame 节点' }))
     await user.selectOptions(screen.getByLabelText('布局方向'), 'flex-row')
     await user.clear(screen.getByLabelText('间距'))

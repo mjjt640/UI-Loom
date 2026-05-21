@@ -1,19 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import {
   alignNodesLeft,
-  createButtonNode,
-  createRectNode,
   distributeNodesHorizontally,
   insertChildNode,
   selectNodes,
 } from '../../../src/domain/commands/editorCommands'
 import { createEmptyDocument } from '../../../src/domain/model/factories'
+import { testButtonNode, testRectNode } from './nodeTestFactories'
 
 describe('alignment commands', () => {
   it('aligns selected nodes to the left edge of the selection bounds', () => {
     const document = createEmptyDocument('Align Test')
-    const rect = createRectNode()
-    const button = createButtonNode('购买')
+    const rect = testRectNode()
+    const button = testButtonNode('购买')
     const withRect = insertChildNode(document, document.rootNodeId, rect)
     const withButton = insertChildNode(withRect, withRect.rootNodeId, button)
     const selected = selectNodes(withButton, [rect.id, button.id])
@@ -25,9 +24,9 @@ describe('alignment commands', () => {
 
   it('distributes selected nodes horizontally in selection order', () => {
     const document = createEmptyDocument('Distribute Test')
-    const left = createRectNode()
-    const middle = createRectNode()
-    const right = createRectNode()
+    const left = testRectNode()
+    const middle = testRectNode()
+    const right = testRectNode()
     const withLeft = insertChildNode(document, document.rootNodeId, {
       ...left,
       layout: { ...left.layout, x: 0, width: 100 },

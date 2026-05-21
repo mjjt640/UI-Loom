@@ -7,6 +7,22 @@ const spacingSchema = z.object({
   left: z.number(),
 })
 
+const constraintsSchema = z.object({
+  horizontal: z.enum(['left', 'center', 'right', 'stretch']).optional(),
+  vertical: z.enum(['top', 'center', 'bottom', 'stretch']).optional(),
+})
+
+const pointSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+})
+
+const pathNodePointSchema = z.object({
+  anchor: pointSchema,
+  inHandle: pointSchema.optional(),
+  outHandle: pointSchema.optional(),
+})
+
 export const nodeSchema = z.object({
   id: z.string(),
   type: z.enum([
@@ -15,6 +31,13 @@ export const nodeSchema = z.object({
     'group',
     'container',
     'rect',
+    'ellipse',
+    'triangle',
+    'star',
+    'polygon',
+    'path',
+    'slice',
+    'icon',
     'text',
     'image',
     'button',
@@ -31,10 +54,15 @@ export const nodeSchema = z.object({
     y: z.number().optional(),
     width: z.union([z.number(), z.literal('hug'), z.literal('fill')]),
     height: z.union([z.number(), z.literal('hug'), z.literal('fill')]),
+    minWidth: z.number().optional(),
+    maxWidth: z.number().optional(),
+    minHeight: z.number().optional(),
+    maxHeight: z.number().optional(),
     gap: z.number().optional(),
     padding: spacingSchema.optional(),
     align: z.enum(['start', 'center', 'end', 'stretch']).optional(),
     justify: z.enum(['start', 'center', 'end', 'between']).optional(),
+    constraints: constraintsSchema.optional(),
   }),
   style: z.object({
     background: z.string().optional(),
@@ -52,6 +80,10 @@ export const nodeSchema = z.object({
     src: z.string().optional(),
     alt: z.string().optional(),
     placeholder: z.string().optional(),
+    pathData: z.string().optional(),
+    pathNodes: z.array(pathNodePointSchema).optional(),
+    svgPath: z.string().optional(),
+    viewBox: z.string().optional(),
   }),
   meta: z.object({
     locked: z.boolean().optional(),

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createEmptyDocument } from '../../src/domain/model/factories'
 import { EditorScreen } from '../../src/features/editor/EditorScreen'
 import { useEditorStore } from '../../src/store/editorStore'
+import { addButton, addRect } from './editorTestActions'
 
 describe('layer panel flow', () => {
   beforeEach(() => {
@@ -15,13 +16,13 @@ describe('layer panel flow', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByText('矩形'))
-    const layer = screen.getByRole('listitem', { name: 'Rectangle' })
-    await user.click(within(layer).getByLabelText('隐藏 Rectangle'))
+    await addRect(user)
+    const layer = screen.getByRole('listitem', { name: '矩形 1' })
+    await user.click(within(layer).getByLabelText('隐藏 矩形 1'))
 
     expect(screen.queryByLabelText('矩形图层')).not.toBeInTheDocument()
 
-    await user.click(within(layer).getByLabelText('显示 Rectangle'))
+    await user.click(within(layer).getByLabelText('显示 矩形 1'))
     expect(screen.getByLabelText('矩形图层')).toBeInTheDocument()
   })
 
@@ -29,9 +30,9 @@ describe('layer panel flow', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByText('矩形'))
-    const layer = screen.getByRole('listitem', { name: 'Rectangle' })
-    await user.click(within(layer).getByLabelText('锁定 Rectangle'))
+    await addRect(user)
+    const layer = screen.getByRole('listitem', { name: '矩形 1' })
+    await user.click(within(layer).getByLabelText('锁定 矩形 1'))
     await user.click(screen.getByLabelText('矩形图层'))
 
     expect(screen.queryByText('已选中 1 个节点')).not.toBeInTheDocument()
@@ -41,15 +42,15 @@ describe('layer panel flow', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByText('矩形'))
-    await user.click(screen.getByText('新增按钮'))
-    const rectangleLayer = screen.getByRole('listitem', { name: 'Rectangle' })
-    await user.click(within(rectangleLayer).getByLabelText('上移 Rectangle'))
+    await addRect(user)
+    await addButton(user)
+    const rectangleLayer = screen.getByRole('listitem', { name: '矩形 1' })
+    await user.click(within(rectangleLayer).getByLabelText('上移 矩形 1'))
 
     const layerNames = screen
       .getAllByRole('listitem')
       .map((item) => item.getAttribute('aria-label'))
 
-    expect(layerNames).toEqual(['Page', 'Button', 'Rectangle'])
+    expect(layerNames).toEqual(['Page', 'Button', '矩形 1'])
   })
 })

@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  createButtonNode,
-  createFrameNode,
   insertChildNode,
 } from '../../../src/domain/commands/editorCommands'
 import { exportToHtmlCssJsBundle } from '../../../src/domain/exporter/htmlCssJsExporter'
@@ -10,6 +8,7 @@ import { exportTargets } from '../../../src/domain/exporter/exportRegistry'
 import { exportToSingleFileHtmlBundle } from '../../../src/domain/exporter/singleFileHtmlExporter'
 import { exportToVue3Bundle } from '../../../src/domain/exporter/vue3Exporter'
 import { createEmptyDocument } from '../../../src/domain/model/factories'
+import { testButtonNode, testFrameNode } from './nodeTestFactories'
 
 describe('export bundle architecture', () => {
   it('lists selectable code export targets', () => {
@@ -26,7 +25,7 @@ describe('export bundle architecture', () => {
     const next = insertChildNode(
       document,
       document.rootNodeId,
-      createButtonNode('购买'),
+      testButtonNode('购买'),
     )
     const bundle = exportToReactTailwindBundle(next)
 
@@ -45,7 +44,7 @@ describe('export bundle architecture', () => {
     const next = insertChildNode(
       document,
       document.rootNodeId,
-      createButtonNode('开始'),
+      testButtonNode('开始'),
     )
     const bundle = exportToHtmlCssJsBundle(next)
 
@@ -66,7 +65,7 @@ describe('export bundle architecture', () => {
     const next = insertChildNode(
       document,
       document.rootNodeId,
-      createButtonNode('提交'),
+      testButtonNode('提交'),
     )
     const bundle = exportToSingleFileHtmlBundle(next)
 
@@ -76,17 +75,20 @@ describe('export bundle architecture', () => {
     expect(bundle.files[0].content).toContain('提交')
   })
 
-  it('exports Vue 3 as a single file component', () => {
+  it('exports Vue 3 as a generated page with README guidance', () => {
     const document = createEmptyDocument('Vue Test')
     const next = insertChildNode(
       document,
       document.rootNodeId,
-      createButtonNode('保存'),
+      testButtonNode('保存'),
     )
     const bundle = exportToVue3Bundle(next)
 
     expect(bundle.target).toBe('vue3-sfc')
-    expect(bundle.files.map((file) => file.path)).toEqual(['GeneratedPage.vue'])
+    expect(bundle.files.map((file) => file.path)).toEqual([
+      'GeneratedPage.vue',
+      'README.md',
+    ])
     expect(bundle.files[0].content).toContain('<template>')
     expect(bundle.files[0].content).toContain('<script setup')
     expect(bundle.files[0].content).toContain('保存')
@@ -94,12 +96,12 @@ describe('export bundle architecture', () => {
 
   it('exports frame auto layout semantics across code targets', () => {
     const document = createEmptyDocument('Frame Export Test')
-    const frameNode = createFrameNode()
+    const frameNode = testFrameNode()
     const withFrame = insertChildNode(document, document.rootNodeId, frameNode)
     const next = insertChildNode(
       withFrame,
       frameNode.id,
-      createButtonNode('继续'),
+      testButtonNode('继续'),
     )
 
     const htmlBundle = exportToHtmlCssJsBundle(next)

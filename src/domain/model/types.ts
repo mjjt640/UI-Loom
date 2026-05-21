@@ -4,6 +4,13 @@ export type NodeType =
   | 'group'
   | 'container'
   | 'rect'
+  | 'ellipse'
+  | 'triangle'
+  | 'star'
+  | 'polygon'
+  | 'path'
+  | 'slice'
+  | 'icon'
   | 'text'
   | 'image'
   | 'button'
@@ -12,6 +19,9 @@ export type NodeType =
   | 'card'
 
 export type LayoutMode = 'absolute' | 'flex-row' | 'flex-column'
+export type LayoutSize = number | 'hug' | 'fill'
+export type HorizontalConstraint = 'left' | 'center' | 'right' | 'stretch'
+export type VerticalConstraint = 'top' | 'center' | 'bottom' | 'stretch'
 
 export interface BoxSpacing {
   top: number
@@ -20,16 +30,26 @@ export interface BoxSpacing {
   left: number
 }
 
+export interface LayoutConstraints {
+  horizontal?: HorizontalConstraint
+  vertical?: VerticalConstraint
+}
+
 export interface LayoutProps {
   mode: LayoutMode
   x?: number
   y?: number
-  width: number | 'hug' | 'fill'
-  height: number | 'hug' | 'fill'
+  width: LayoutSize
+  height: LayoutSize
+  minWidth?: number
+  maxWidth?: number
+  minHeight?: number
+  maxHeight?: number
   gap?: number
   padding?: BoxSpacing
   align?: 'start' | 'center' | 'end' | 'stretch'
   justify?: 'start' | 'center' | 'end' | 'between'
+  constraints?: LayoutConstraints
 }
 
 export interface StyleProps {
@@ -44,11 +64,30 @@ export interface StyleProps {
   opacity?: number
 }
 
+export interface PathNodePoint {
+  anchor: {
+    x: number
+    y: number
+  }
+  inHandle?: {
+    x: number
+    y: number
+  }
+  outHandle?: {
+    x: number
+    y: number
+  }
+}
+
 export interface ContentProps {
   text?: string
   src?: string
   alt?: string
   placeholder?: string
+  pathData?: string
+  pathNodes?: PathNodePoint[]
+  svgPath?: string
+  viewBox?: string
 }
 
 export interface UINode {

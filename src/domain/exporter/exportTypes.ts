@@ -19,9 +19,16 @@ export interface GeneratedFile {
   content: string
 }
 
+export interface ExportCodeMapping {
+  filePath: string
+  nodeId: string
+  token: string
+}
+
 export interface ExportBundle {
   target: ExportTargetId
   files: GeneratedFile[]
+  mappings: ExportCodeMapping[]
 }
 
 export interface ExportTargetDefinition {

@@ -1,4 +1,4 @@
-import type { LayoutProps, StyleProps } from '../model/types'
+import type { LayoutProps, LayoutSize, StyleProps } from '../model/types'
 
 export function textStyleToClassName(style: StyleProps) {
   const classes: string[] = []
@@ -6,25 +6,79 @@ export function textStyleToClassName(style: StyleProps) {
   if (style.fontWeight === 600) classes.push('font-semibold')
   if (style.fontWeight === 700) classes.push('font-bold')
   if (style.color === '#111827') classes.push('text-gray-900')
+  if (style.color && style.color !== '#111827') {
+    classes.push(`text-[${style.color}]`)
+  }
   if (style.fontSize === 24) classes.push('text-2xl')
+  if (style.fontSize && style.fontSize !== 24) {
+    classes.push(`text-[${style.fontSize}px]`)
+  }
+  classes.push(...advancedStyleClassNames(style))
 
   return classes.join(' ')
+}
+
+function arbitraryValue(value: string) {
+  return value.trim().replaceAll(' ', '_')
+}
+
+function radiusClassName(radius: number | undefined) {
+  if (radius === undefined) return ''
+  if (radius === 12) return 'rounded-xl'
+  if (radius === 16) return 'rounded-2xl'
+  if (radius === 20) return 'rounded-2xl'
+  if (radius === 24) return 'rounded-3xl'
+  return `rounded-[${radius}px]`
+}
+
+function backgroundClassName(background: string | undefined) {
+  if (!background) return ''
+  if (background === '#111827') return 'bg-gray-900'
+  if (background === '#ffffff') return 'bg-white'
+  if (background === '#f8fafc') return 'bg-slate-50'
+  return `bg-[${background}]`
+}
+
+function borderWidthClassName(borderWidth: number | undefined) {
+  if (!borderWidth) return ''
+  if (borderWidth === 1) return 'border'
+  return `border-[${borderWidth}px]`
+}
+
+function borderColorClassName(borderColor: string | undefined) {
+  if (!borderColor) return ''
+  if (borderColor === '#e2e8f0') return 'border-slate-200'
+  if (borderColor === '#d6d3d1') return 'border-stone-300'
+  return `border-[${borderColor}]`
+}
+
+function shadowClassName(shadow: string | undefined) {
+  return shadow ? `shadow-[${arbitraryValue(shadow)}]` : ''
+}
+
+function opacityClassName(opacity: number | undefined) {
+  if (opacity === undefined) return ''
+  if (opacity === 1) return ''
+  return `opacity-[${opacity}]`
+}
+
+function advancedStyleClassNames(style: StyleProps) {
+  return [
+    shadowClassName(style.shadow),
+    opacityClassName(style.opacity),
+  ].filter(Boolean)
 }
 
 export function boxStyleToClassName(style: StyleProps) {
   const classes: string[] = []
 
-  if (style.radius === 12) classes.push('rounded-xl')
-  if (style.radius === 16) classes.push('rounded-2xl')
-  if (style.radius === 20) classes.push('rounded-2xl')
-  if (style.radius === 24) classes.push('rounded-3xl')
-  if (style.background === '#111827') classes.push('bg-gray-900')
-  if (style.background === '#ffffff') classes.push('bg-white')
-  if (style.background === '#f8fafc') classes.push('bg-slate-50')
+  classes.push(radiusClassName(style.radius))
+  classes.push(backgroundClassName(style.background))
   if (style.color === '#ffffff') classes.push('text-white')
-  if (style.borderWidth) classes.push('border')
-  if (style.borderColor === '#e2e8f0') classes.push('border-slate-200')
-  if (style.borderColor === '#d6d3d1') classes.push('border-stone-300')
+  if (style.color && style.color !== '#ffffff') classes.push(`text-[${style.color}]`)
+  classes.push(borderWidthClassName(style.borderWidth))
+  classes.push(borderColorClassName(style.borderColor))
+  classes.push(...advancedStyleClassNames(style))
 
   return classes.join(' ')
 }
@@ -40,6 +94,98 @@ function spacingClass(prefix: string, value: number | undefined) {
   if (value === 32) return `${prefix}-8`
 
   return `${prefix}-[${value}px]`
+}
+
+function numericPositionClass(prefix: string, value: number | undefined) {
+  return value === undefined ? '' : `${prefix}-[${value}px]`
+}
+
+function sizeClass(axis: 'height' | 'width', size: LayoutSize) {
+  if (axis === 'width') {
+    if (size === 'fill') return 'w-full'
+    if (size === 'hug') return 'w-auto'
+    return `w-[${size}px]`
+  }
+
+  if (size === 'fill') return 'h-full'
+  if (size === 'hug') return 'h-auto'
+  return `h-[${size}px]`
+}
+
+function boundsClass(prefix: string, value: number | undefined) {
+  return value === undefined ? '' : `${prefix}-[${value}px]`
+}
+
+function horizontalConstraintClass(layout: LayoutProps) {
+  const horizontal = layout.constraints?.horizontal ?? 'left'
+
+  if (horizontal === 'center') {
+    return 'left-1/2 -translate-x-1/2'
+  }
+
+  if (horizontal === 'right') {
+    return numericPositionClass('right', layout.x)
+  }
+
+  if (horizontal === 'stretch') {
+    return [
+      numericPositionClass('left', layout.x),
+      numericPositionClass('right', layout.x),
+    ].join(' ')
+  }
+
+  return numericPositionClass('left', layout.x)
+}
+
+function verticalConstraintClass(layout: LayoutProps) {
+  const vertical = layout.constraints?.vertical ?? 'top'
+
+  if (vertical === 'center') {
+    return 'top-1/2 -translate-y-1/2'
+  }
+
+  if (vertical === 'bottom') {
+    return numericPositionClass('bottom', layout.y)
+  }
+
+  if (vertical === 'stretch') {
+    return [
+      numericPositionClass('top', layout.y),
+      numericPositionClass('bottom', layout.y),
+    ].join(' ')
+  }
+
+  return numericPositionClass('top', layout.y)
+}
+
+export function layoutSizingToClassName(layout: LayoutProps) {
+  return [
+    sizeClass('width', layout.width),
+    sizeClass('height', layout.height),
+    boundsClass('min-w', layout.minWidth),
+    boundsClass('max-w', layout.maxWidth),
+    boundsClass('min-h', layout.minHeight),
+    boundsClass('max-h', layout.maxHeight),
+  ]
+    .filter(Boolean)
+    .join(' ')
+}
+
+export function layoutPositionToClassName(
+  layout: LayoutProps,
+  isRootChild: boolean,
+) {
+  if (!isRootChild) {
+    return ''
+  }
+
+  return [
+    'absolute',
+    horizontalConstraintClass(layout),
+    verticalConstraintClass(layout),
+  ]
+    .filter(Boolean)
+    .join(' ')
 }
 
 export function layoutToClassName(layout: Pick<LayoutProps, 'gap' | 'mode'>) {

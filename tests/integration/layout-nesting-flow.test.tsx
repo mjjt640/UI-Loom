@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createEmptyDocument } from '../../src/domain/model/factories'
 import { EditorScreen } from '../../src/features/editor/EditorScreen'
 import { useEditorStore } from '../../src/store/editorStore'
+import { addButton, addContainer } from './editorTestActions'
 
 describe('layout and nesting flow', () => {
   beforeEach(() => {
@@ -15,7 +16,7 @@ describe('layout and nesting flow', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByText('新增按钮'))
+    await addButton(user)
     await user.click(screen.getByRole('button', { name: '按钮' }))
     await user.clear(screen.getByLabelText('X'))
     await user.type(screen.getByLabelText('X'), '180')
@@ -32,7 +33,7 @@ describe('layout and nesting flow', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByText('新增按钮'))
+    await addButton(user)
     const button = screen.getByRole('button', { name: '按钮' })
 
     await user.pointer([
@@ -53,8 +54,8 @@ describe('layout and nesting flow', () => {
     const user = userEvent.setup()
     render(<EditorScreen />)
 
-    await user.click(screen.getByText('新增容器'))
-    await user.click(screen.getByText('新增按钮'))
+    await addContainer(user)
+    await addButton(user)
     await user.click(screen.getByRole('button', { name: '按钮' }))
     await user.click(screen.getByText('移入容器'))
 

@@ -1,5 +1,6 @@
 import type { PageDocument } from '../model/types'
 import type { ExportBundle } from './exportTypes'
+import { mappingsForRootFile } from './codeMapping'
 import { renderCss, renderHtmlBody } from './htmlRenderEngine'
 
 export function exportToSingleFileHtmlBundle(
@@ -37,5 +38,6 @@ export function exportToSingleFileHtmlBundle(
         ].join('\n'),
       },
     ],
+    mappings: mappingsForRootFile(document, 'index.html'),
   }
 }

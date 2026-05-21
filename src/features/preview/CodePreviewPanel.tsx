@@ -18,9 +18,14 @@ function firstFile(files: GeneratedFile[]) {
 }
 
 export function CodePreviewPanel({ exportTargetId }: CodePreviewPanelProps) {
-  const [activePath, setActivePath] = useState<string | null>(null)
+  const [manualActivePath, setManualActivePath] = useState<string | null>(null)
   const document = useEditorStore((state) => state.document)
   const bundle = createExportBundle(document, exportTargetId)
+  const selectedNodeId = document.selectedNodeIds[0]
+  const mappedPath = selectedNodeId
+    ? bundle.mappings.find((mapping) => mapping.nodeId === selectedNodeId)?.filePath
+    : null
+  const activePath = mappedPath ?? manualActivePath
   const activeFile =
     bundle.files.find((file) => file.path === activePath) ?? firstFile(bundle.files)
 
@@ -36,7 +41,7 @@ export function CodePreviewPanel({ exportTargetId }: CodePreviewPanelProps) {
                 : 'block w-full rounded-md px-2 py-1 text-left text-xs text-stone-600 hover:bg-stone-100'
             }
             key={file.path}
-            onClick={() => setActivePath(file.path)}
+            onClick={() => setManualActivePath(file.path)}
             type="button"
           >
             {file.path}
