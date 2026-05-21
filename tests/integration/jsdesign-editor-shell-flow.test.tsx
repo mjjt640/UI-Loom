@@ -489,6 +489,92 @@ describe('jsdesign inspired editor shell', () => {
     expect(screen.getByRole('button', { name: 'briefcase' })).toBeInTheDocument()
   })
 
+  it('keeps favorite and recent remix icon shortcuts', async () => {
+    const user = userEvent.setup()
+    render(<EditorScreen />)
+
+    await user.click(screen.getByRole('tab', { name: '资源' }))
+    expect(await screen.findByRole('button', { name: 'align-right' }))
+      .toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '收藏 align-right' }))
+
+    const favoritesRegion = screen.getByRole('region', { name: '收藏图标' })
+
+    expect(screen.getByRole('button', { name: '取消收藏 align-right' }))
+      .toBeInTheDocument()
+    expect(
+      within(favoritesRegion).getByRole('button', {
+        name: '选择收藏图标 align-right',
+      }),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'align-right' }))
+
+    const recentRegion = screen.getByRole('region', { name: '最近使用图标' })
+
+    expect(
+      within(recentRegion).getByRole('button', {
+        name: '选择最近使用图标 align-right',
+      }),
+    ).toBeInTheDocument()
+    expect(localStorage.getItem('ui-loom.resource.favoriteIconNames'))
+      .toContain('align-right')
+    expect(localStorage.getItem('ui-loom.resource.recentIconNames'))
+      .toContain('align-right')
+  })
+
+  it('pins frequently used remix icon categories before other categories', async () => {
+    const user = userEvent.setup()
+    render(<EditorScreen />)
+
+    await user.click(screen.getByRole('tab', { name: '资源' }))
+    expect(await screen.findByRole('button', { name: 'briefcase' }))
+      .toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'briefcase' }))
+
+    const categoryGroup = screen.getByRole('group', { name: '图标分类' })
+    const categoryLabels = within(categoryGroup)
+      .getAllByRole('button')
+      .map((button) => button.textContent)
+
+    expect(categoryLabels.slice(0, 3)).toEqual(['全部 4', '商务 1', '编辑 3'])
+  })
+
+  it('loads persisted favorite and recent remix icon shortcuts', async () => {
+    localStorage.setItem(
+      'ui-loom.resource.favoriteIconNames',
+      JSON.stringify(['briefcase']),
+    )
+    localStorage.setItem(
+      'ui-loom.resource.recentIconNames',
+      JSON.stringify(['align-right']),
+    )
+
+    const user = userEvent.setup()
+    render(<EditorScreen />)
+
+    await user.click(screen.getByRole('tab', { name: '资源' }))
+    expect(await screen.findByRole('button', { name: 'briefcase' }))
+      .toBeInTheDocument()
+
+    expect(screen.getByRole('button', { name: '取消收藏 briefcase' }))
+      .toBeInTheDocument()
+    expect(
+      within(screen.getByRole('region', { name: '收藏图标' })).getByRole(
+        'button',
+        { name: '选择收藏图标 briefcase' },
+      ),
+    ).toBeInTheDocument()
+    expect(
+      within(screen.getByRole('region', { name: '最近使用图标' })).getByRole(
+        'button',
+        { name: '选择最近使用图标 align-right' },
+      ),
+    ).toBeInTheDocument()
+  })
+
   it('shows an empty state when remix icon search has no matches', async () => {
     const user = userEvent.setup()
     render(<EditorScreen />)

@@ -110,6 +110,46 @@ function remixIconCategoryLabel(category: string) {
   return remixIconCategoryLabels[category] ?? category
 }
 
+const resourceFavoriteIconNamesStorageKey = 'ui-loom.resource.favoriteIconNames'
+const resourceRecentIconNamesStorageKey = 'ui-loom.resource.recentIconNames'
+const resourcePinnedCategoryNamesStorageKey =
+  'ui-loom.resource.pinnedCategoryNames'
+
+function readStoredResourceNames(key: string) {
+  if (typeof window === 'undefined') {
+    return []
+  }
+
+  try {
+    const value = JSON.parse(window.localStorage.getItem(key) ?? '[]')
+
+    return Array.isArray(value)
+      ? value.filter((name): name is string => typeof name === 'string')
+      : []
+  } catch {
+    return []
+  }
+}
+
+function writeStoredResourceNames(key: string, names: readonly string[]) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(key, JSON.stringify(names))
+}
+
+function addResourceNameFirst(
+  names: readonly string[],
+  name: string,
+  limit = 8,
+) {
+  return [name, ...names.filter((storedName) => storedName !== name)].slice(
+    0,
+    limit,
+  )
+}
+
 function layerDisplayName(node: UINode) {
   const defaultNames: Record<string, string> = {
     Button: 'Button',
@@ -308,7 +348,34 @@ function ResourceLibraryPanel({
   )
   const [loadAttempt, setLoadAttempt] = useState(0)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [favoriteIconNames, setFavoriteIconNames] = useState<readonly string[]>(
+    () => readStoredResourceNames(resourceFavoriteIconNamesStorageKey),
+  )
+  const [recentIconNames, setRecentIconNames] = useState<readonly string[]>(
+    () => readStoredResourceNames(resourceRecentIconNamesStorageKey),
+  )
+  const [pinnedCategoryNames, setPinnedCategoryNames] = useState<
+    readonly string[]
+  >(() => readStoredResourceNames(resourcePinnedCategoryNamesStorageKey))
   const normalizedQuery = query.trim().toLowerCase()
+
+  useEffect(() => {
+    writeStoredResourceNames(
+      resourceFavoriteIconNamesStorageKey,
+      favoriteIconNames,
+    )
+  }, [favoriteIconNames])
+
+  useEffect(() => {
+    writeStoredResourceNames(resourceRecentIconNamesStorageKey, recentIconNames)
+  }, [recentIconNames])
+
+  useEffect(() => {
+    writeStoredResourceNames(
+      resourcePinnedCategoryNamesStorageKey,
+      pinnedCategoryNames,
+    )
+  }, [pinnedCategoryNames])
 
   useEffect(() => {
     let mounted = true
@@ -346,12 +413,33 @@ function ResourceLibraryPanel({
       counts.set(icon.category, (counts.get(icon.category) ?? 0) + 1)
     })
 
-    return [...counts.entries()].map(([name, count]) => ({
-      count,
-      label: remixIconCategoryLabel(name),
-      name,
-    }))
-  }, [icons])
+    return [...counts.entries()]
+      .map(([name, count]) => ({
+        count,
+        label: remixIconCategoryLabel(name),
+        name,
+      }))
+      .sort((first, second) => {
+        const firstPinnedIndex = pinnedCategoryNames.indexOf(first.name)
+        const secondPinnedIndex = pinnedCategoryNames.indexOf(second.name)
+        const firstIsPinned = firstPinnedIndex >= 0
+        const secondIsPinned = secondPinnedIndex >= 0
+
+        if (firstIsPinned && secondIsPinned) {
+          return firstPinnedIndex - secondPinnedIndex
+        }
+
+        if (firstIsPinned) {
+          return -1
+        }
+
+        if (secondIsPinned) {
+          return 1
+        }
+
+        return 0
+      })
+  }, [icons, pinnedCategoryNames])
 
   const visibleIcons = useMemo(
     () =>
@@ -393,6 +481,104 @@ function ResourceLibraryPanel({
   const clearFilters = () => {
     setQuery('')
     setSelectedCategory(null)
+  }
+  const iconsByName = useMemo(() => {
+    const iconMap = new Map<string, RemixIconResource>()
+
+    icons.forEach((icon) => {
+      iconMap.set(icon.name, icon)
+    })
+
+    return iconMap
+  }, [icons])
+  const favoriteIcons = favoriteIconNames
+    .map((name) => iconsByName.get(name))
+    .filter((icon): icon is RemixIconResource => icon !== undefined)
+  const recentIcons = recentIconNames
+    .map((name) => iconsByName.get(name))
+    .filter((icon): icon is RemixIconResource => icon !== undefined)
+  const selectResourceIcon = (icon: RemixIconResource) => {
+    setRecentIconNames((names) => addResourceNameFirst(names, icon.name))
+    setPinnedCategoryNames((names) =>
+      addResourceNameFirst(names, icon.category, 4),
+    )
+    onResourceIconSelect(icon)
+  }
+  const toggleFavoriteIcon = (icon: RemixIconResource) => {
+    setFavoriteIconNames((names) =>
+      names.includes(icon.name)
+        ? names.filter((name) => name !== icon.name)
+        : addResourceNameFirst(names, icon.name),
+    )
+  }
+  const renderShortcutIconButton = (
+    icon: RemixIconResource,
+    shortcutType: 'favorite' | 'recent',
+  ) => (
+    <button
+      aria-label={
+        shortcutType === 'favorite'
+          ? `选择收藏图标 ${icon.name}`
+          : `选择最近使用图标 ${icon.name}`
+      }
+      className="flex min-w-[96px] items-center gap-2 rounded-md border border-[#d9dde5] bg-white px-2 py-2 text-left text-xs text-[#4b5563] hover:border-[#1677ff] hover:text-[#1677ff]"
+      key={`${shortcutType}-${icon.name}`}
+      onClick={() => selectResourceIcon(icon)}
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        className="h-4 w-4 shrink-0"
+        fill="currentColor"
+        viewBox={icon.viewBox}
+      >
+        <path d={icon.svgPath} />
+      </svg>
+      <span className="truncate">{icon.name}</span>
+    </button>
+  )
+  const renderIconCard = (icon: RemixIconResource) => {
+    const isFavorite = favoriteIconNames.includes(icon.name)
+
+    return (
+      <div className="group text-left" key={icon.name}>
+        <div className="relative">
+          <button
+            aria-label={icon.name}
+            className="flex h-[128px] w-full items-center justify-center rounded-sm border border-[#d9dde5] bg-[#e7e7e7] text-[#a3a3a3] transition group-hover:border-[#1677ff] group-hover:bg-[#eef6ff] group-hover:text-[#1677ff]"
+            onClick={() => selectResourceIcon(icon)}
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              className="h-7 w-7"
+              fill="currentColor"
+              viewBox={icon.viewBox}
+            >
+              <path d={icon.svgPath} />
+            </svg>
+          </button>
+          <button
+            aria-label={
+              isFavorite ? `取消收藏 ${icon.name}` : `收藏 ${icon.name}`
+            }
+            aria-pressed={isFavorite}
+            className={
+              isFavorite
+                ? 'absolute right-2 top-2 rounded-full bg-[#1677ff] px-2 py-1 text-xs font-semibold text-white shadow-sm'
+                : 'absolute right-2 top-2 rounded-full border border-[#d9dde5] bg-white px-2 py-1 text-xs font-semibold text-[#4b5563] shadow-sm hover:border-[#1677ff] hover:text-[#1677ff]'
+            }
+            onClick={() => toggleFavoriteIcon(icon)}
+            type="button"
+          >
+            收藏
+          </button>
+        </div>
+        <span className="mt-1.5 block truncate text-sm text-[#4b5563]">
+          {icon.name}
+        </span>
+      </div>
+    )
   }
 
   return (
@@ -442,7 +628,11 @@ function ResourceLibraryPanel({
       {loadState === 'ready' ? (
         <div className="mt-4 space-y-2">
           <p className="text-xs font-semibold text-[#8a94a6]">分类</p>
-          <div className="flex flex-wrap gap-2">
+          <div
+            aria-label="图标分类"
+            className="flex flex-wrap gap-2"
+            role="group"
+          >
             <button
               aria-pressed={selectedCategory === null}
               className={
@@ -503,6 +693,46 @@ function ResourceLibraryPanel({
               </div>
             </div>
           </div>
+          {favoriteIcons.length > 0 ? (
+            <section
+              aria-label="收藏图标"
+              className="rounded-lg border border-[#d9dde5] bg-white px-3 py-3"
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-xs font-semibold text-[#1f2329]">
+                  收藏图标
+                </h3>
+                <span className="text-xs text-[#8a94a6]">
+                  {favoriteIcons.length}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {favoriteIcons.map((icon) =>
+                  renderShortcutIconButton(icon, 'favorite'),
+                )}
+              </div>
+            </section>
+          ) : null}
+          {recentIcons.length > 0 ? (
+            <section
+              aria-label="最近使用图标"
+              className="rounded-lg border border-[#d9dde5] bg-white px-3 py-3"
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-xs font-semibold text-[#1f2329]">
+                  最近使用
+                </h3>
+                <span className="text-xs text-[#8a94a6]">
+                  {recentIcons.length}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {recentIcons.map((icon) =>
+                  renderShortcutIconButton(icon, 'recent'),
+                )}
+              </div>
+            </section>
+          ) : null}
         </div>
       ) : null}
       <div className="mt-5 space-y-4">
@@ -544,29 +774,7 @@ function ResourceLibraryPanel({
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-x-4 gap-y-5">
-              {visibleIcons.map((icon) => (
-                <button
-                  aria-label={icon.name}
-                  className="group text-left"
-                  key={icon.name}
-                  onClick={() => onResourceIconSelect(icon)}
-                  type="button"
-                >
-                  <span className="flex h-[128px] items-center justify-center rounded-sm border border-[#d9dde5] bg-[#e7e7e7] text-[#a3a3a3] transition group-hover:border-[#1677ff] group-hover:bg-[#eef6ff] group-hover:text-[#1677ff]">
-                    <svg
-                      aria-hidden="true"
-                      className="h-7 w-7"
-                      fill="currentColor"
-                      viewBox={icon.viewBox}
-                    >
-                      <path d={icon.svgPath} />
-                    </svg>
-                  </span>
-                  <span className="mt-1.5 block truncate text-sm text-[#4b5563]">
-                    {icon.name}
-                  </span>
-                </button>
-              ))}
+              {visibleIcons.map((icon) => renderIconCard(icon))}
             </div>
           )}
         </section>
